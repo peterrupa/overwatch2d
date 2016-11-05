@@ -1,14 +1,12 @@
-   // File Name GreetingServer.java
-
 import java.net.*;
 import java.io.*;
 import java.util.LinkedList;
 
-public class GreetingServer extends Thread{
+public class ChatServer extends Thread{
    private ServerSocket serverSocket;
    private LinkedList<Socket> listOfClients = new LinkedList<Socket>();
    
-   public GreetingServer(int port) throws IOException{
+   public ChatServer(int port) throws IOException{
 	  serverSocket = new ServerSocket(port);
       System.out.println("Chat server started.");
 	  System.out.println("Listening on port " + serverSocket.getLocalPort() + ".");
@@ -39,14 +37,16 @@ public class GreetingServer extends Thread{
                                 out.writeUTF(message);
                                 out.flush();
                             }
-                        } catch(Exception e) {}
+                        } catch(Exception e) {
+                            listOfClients.remove(server);
+                        }
                     }
 				}			
 			};
 
 			messageHandler.start();           
          } catch(IOException e) {
-            System.out.println("Usage: java GreetingServer <port no.>");
+            System.out.println("Usage: java ChatServer <port no.>");
             break;
          }
       } 
@@ -55,12 +55,12 @@ public class GreetingServer extends Thread{
    public static void main(String [] args){
       try{
          int port = Integer.parseInt(args[0]);
-         Thread t = new GreetingServer(port);
+         Thread t = new ChatServer(port);
          t.start();
       } catch(IOException e){
-         System.out.println("Usage: java GreetingServer <port no.>");
+         System.out.println("Usage: java ChatServer <port no.>");
       } catch(ArrayIndexOutOfBoundsException e) {
-         System.out.println("Usage: java GreetingServer <port no.> ");
+         System.out.println("Usage: java ChatServer <port no.> ");
       }
    }
 }

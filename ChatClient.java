@@ -2,7 +2,7 @@ import java.net.*;
 import java.io.*;
 import java.util.Scanner;
 
-public class GreetingClient{
+public class ChatClient{
    static String username = "";
    
    public static String repeat(String s, int n) {
@@ -75,12 +75,7 @@ public class GreetingClient{
          //e.printStackTrace();
       	System.out.println("Cannot find Server");
       } catch(ArrayIndexOutOfBoundsException e){
-         System.out.println("Usage: java GreetingClient <server ip> <port no.> '<your message to the server>'");
+         System.out.println("Usage: java ChatClient <server ip> <port no.>");
       }
    }
 }
-
-/**
-* a) Socket client = new Socket(serverName, port);
-* b) client.close();
-**/
