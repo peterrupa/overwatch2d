@@ -6,10 +6,10 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 
 class TestActor extends Actor {
-    private Texture texture = new Texture(Gdx.files.internal("badlogic.jpg"));
+    private Texture texture = new Texture(Gdx.files.internal("actor.png"));
 
     @Override
     public void draw(Batch batch, float alpha){
-        batch.draw(texture,600,500);
+        batch.draw(texture, getX() - texture.getWidth() / 2, getY() - texture.getHeight() / 2);
     }
 }

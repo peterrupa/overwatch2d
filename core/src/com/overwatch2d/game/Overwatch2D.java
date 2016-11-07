@@ -1,43 +1,35 @@
 package com.overwatch2d.game;
 
-
-import com.badlogic.gdx.ApplicationListener;
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 
-public class Overwatch2D implements ApplicationListener {
-    private Stage stage;
+public class Overwatch2D extends Game {
+    SpriteBatch batch;
+    BitmapFont font;
 
-    @Override
     public void create() {
-        stage = new Stage(new ExtendViewport(Gdx.graphics.getWidth(),Gdx.graphics.getHeight()));
+        batch = new SpriteBatch();
+        font = new BitmapFont();
 
-        TestActor myActor = new TestActor();
-        stage.addActor(myActor);
+        font = createFont("fonts/bignoodletoo.ttf", 54);
+
+        this.setScreen(new MainMenu(this));
     }
 
-    @Override
-    public void dispose() {
-        stage.dispose();
-    }
-
-    @Override
     public void render() {
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        stage.draw();
+        super.render();
     }
 
-    @Override
-    public void resize(int width, int height) {
-    }
+    private BitmapFont createFont(String filename, int size) {
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal(filename));
+        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.size = size;
+        BitmapFont font = generator.generateFont(parameter); // font size 12 pixels
+        generator.dispose(); // don't forget to dispose to avoid memory leaks!
 
-    @Override
-    public void pause() {
-    }
-
-    @Override
-    public void resume() {
+        return font;
     }
 }
