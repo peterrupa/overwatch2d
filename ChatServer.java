@@ -39,6 +39,7 @@ public class ChatServer extends Thread{
                             }
                         } catch(Exception e) {
                             listOfClients.remove(server);
+                            break;
                         }
                     }
 				}			
