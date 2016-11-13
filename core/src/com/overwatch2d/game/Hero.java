@@ -9,7 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 class Hero extends Actor {
     private Texture texture = new Texture(Gdx.files.internal("actor.png"));
     private Body physicsBody;
-    private float speed = 2.5f;
+    private float speed = 3f;
 
     Hero(World world, float initialX, float initialY) {
         setSize(texture.getWidth(), texture.getHeight());
@@ -28,8 +28,11 @@ class Hero extends Actor {
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.density = 1f;
-        fixtureDef.friction = 1f;
+        fixtureDef.friction = 100f;
         fixtureDef.restitution = 0f;
+
+        physicsBody.setLinearDamping(5f);
+        physicsBody.setAngularDamping(5f);
 
         physicsBody.createFixture(fixtureDef);
 
@@ -43,22 +46,22 @@ class Hero extends Actor {
     @Override
     public void draw(Batch batch, float alpha){
         batch.draw(
-                texture,
-                getX() - texture.getWidth() / 2,
-                getY() - texture.getHeight() / 2,
-                (float)texture.getWidth() / 2,
-                (float)texture.getHeight() / 2,
-                (float)texture.getWidth(),
-                (float)texture.getHeight(),
-                1f,
-                1f,
-                getRotation(),
-                (int)getX(),
-                (int)getY(),
-                texture.getWidth(),
-                texture.getHeight(),
-                false,
-                false
+            texture,
+            getX() - texture.getWidth() / 2,
+            getY() - texture.getHeight() / 2,
+            (float)texture.getWidth() / 2,
+            (float)texture.getHeight() / 2,
+            (float)texture.getWidth(),
+            (float)texture.getHeight(),
+            1f,
+            1f,
+            getRotation(),
+            (int)getX(),
+            (int)getY(),
+            texture.getWidth(),
+            texture.getHeight(),
+            false,
+            false
         );
     }
 

@@ -55,9 +55,9 @@ class GameScreen implements Screen, InputProcessor {
         // create physics world
         world = new World(new Vector2(0, 0), true);
 
-        heroes.add(new Hero(world, 100, 100));
-        heroes.add(new Hero(world, 200, 200));
-        heroes.add(new Hero(world, 300, 200));
+        heroes.add(new Hero(world, 1100, 1100));
+        heroes.add(new Hero(world, 1200, 1200));
+        heroes.add(new Hero(world, 1300, 1200));
 
         playerHero = heroes.get(0);
 
@@ -76,6 +76,8 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public void render(float delta) {
+        updateSpeed(playerHero);
+
         world.step(1f/60f, 6, 2);
 
         for(Hero hero: heroes) {
@@ -87,6 +89,17 @@ class GameScreen implements Screen, InputProcessor {
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        Vector3 mouseCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+        mouseCoordinates = camera.unproject(mouseCoordinates);
+
+        double angle = Math.atan2(
+            mouseCoordinates.y / Config.PIXELS_TO_METERS - playerHero.getBody().getWorldCenter().y,
+            mouseCoordinates.x / Config.PIXELS_TO_METERS - playerHero.getBody().getWorldCenter().x
+        ) * 180.0d / Math.PI;
+
+        camera.position.x = playerHero.getX() + 1.5f * Config.PIXELS_TO_METERS * (float)Math.cos(Math.toRadians(angle));
+        camera.position.y = playerHero.getY() + 1.5f * Config.PIXELS_TO_METERS * (float)Math.sin(Math.toRadians(angle));
 
         camera.update();
 
@@ -120,22 +133,11 @@ class GameScreen implements Screen, InputProcessor {
             AHold = false;
         }
 
-        updateSpeed(playerHero);
-
         return false;
     }
 
     @Override
     public boolean keyDown(int keycode) {
-        if(keycode == Input.Keys.LEFT)
-            camera.translate(-10,0);
-        if(keycode == Input.Keys.RIGHT)
-            camera.translate(10,0);
-        if(keycode == Input.Keys.UP)
-            camera.translate(0,10);
-        if(keycode == Input.Keys.DOWN)
-            camera.translate(0,-10);
-
         if(keycode == Input.Keys.W) {
             WHold = true;
         }
@@ -148,9 +150,6 @@ class GameScreen implements Screen, InputProcessor {
         if(keycode == Input.Keys.A) {
             AHold = true;
         }
-
-        updateSpeed(playerHero);
-
 
         return false;
     }
