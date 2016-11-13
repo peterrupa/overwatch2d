@@ -10,8 +10,8 @@ public class DesktopLauncher {
 
         config.fullscreen = true;
         config.vSyncEnabled = true;
-        config.width = 1280;
-        config.height = 720;
+        config.width = 1366;
+        config.height = 768;
 
 		new LwjglApplication(new Overwatch2D(), config);
 	}

@@ -85,13 +85,13 @@ class MainMenu implements Screen, InputProcessor {
         });
 
         TextButton exit = new TextButton("Exit", textStyle);
-        exit.setPosition(50, 440 - exit.getHeight()/2);
+        exit.setPosition(50, 410 - exit.getHeight()/2);
 
         stage.addActor(exit);
 
         final Image exitGradient = new Image(new Texture(Gdx.files.internal("effects/button_gradient.png")));
         exitGradient.setScale(0.45f);
-        exitGradient.setPosition(20, 500 - exitGradient.getHeight()/2);
+        exitGradient.setPosition(20, 470 - exitGradient.getHeight()/2);
         exitGradient.setColor(1, 1, 1, 0);
 
         stage.addActor(exitGradient);
