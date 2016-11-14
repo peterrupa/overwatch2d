@@ -1,6 +1,7 @@
 package com.overwatch2d.game;
 
 import com.badlogic.gdx.*;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Matrix4;
@@ -25,6 +26,7 @@ class GameScreen implements Screen, InputProcessor {
 
     static ArrayList<Hero> heroes = new ArrayList<Hero>();
     static ArrayList<Projectile> projectiles = new ArrayList<Projectile>();
+    static ArrayList<Projectile> projectilesDestroyed = new ArrayList<Projectile>();
     private Hero playerHero;
     private Cursor cursor;
 
@@ -37,6 +39,8 @@ class GameScreen implements Screen, InputProcessor {
 
     private Box2DDebugRenderer debugRenderer;
     private Matrix4 debugMatrix;
+
+    private static Sound hitSound = Gdx.audio.newSound(Gdx.files.internal("sfx/hit/hit.mp3"));
 
     GameScreen(final Overwatch2D gam) {
         game = gam;
@@ -73,6 +77,51 @@ class GameScreen implements Screen, InputProcessor {
         cursor = new Cursor(position.x, position.y);
 
         stage.addActor(cursor);
+
+        world.setContactListener(new ContactListener() {
+            @Override
+            public void beginContact(Contact contact) {
+                if((contact.getFixtureA().getBody().getUserData() instanceof Projectile &&
+                    contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
+                   (contact.getFixtureA().getBody().getUserData() instanceof Hero &&
+                    contact.getFixtureB().getBody().getUserData() instanceof Projectile)
+                ) {
+                    hitSound.play();
+
+                    Projectile projectile;
+                    Hero hitHero;
+
+                    if(contact.getFixtureA().getBody().getUserData() instanceof Projectile) {
+                        projectile = (Projectile) contact.getFixtureA().getBody().getUserData();
+                        hitHero = (Hero) contact.getFixtureB().getBody().getUserData();
+                    }
+                    else {
+                        projectile = (Projectile) contact.getFixtureB().getBody().getUserData();
+                        hitHero = (Hero) contact.getFixtureA().getBody().getUserData();
+                    }
+
+                    projectile.hit(hitHero);
+
+//                    particles
+//                    stage.addActor(new Cursor(contact.getWorldManifold().getPoints()[0].x * Config.PIXELS_TO_METERS, contact.getWorldManifold().getPoints()[0].y * Config.PIXELS_TO_METERS));
+                }
+            }
+
+            @Override
+            public void endContact(Contact contact) {
+
+            }
+
+            @Override
+            public void preSolve(Contact contact, Manifold oldManifold) {
+
+            }
+
+            @Override
+            public void postSolve(Contact contact, ContactImpulse impulse) {
+
+            }
+        });
     }
 
     @Override
@@ -83,6 +132,13 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public void render(float delta) {
+        for(Projectile p: projectilesDestroyed) {
+            world.destroyBody(p.getBody());
+            projectiles.remove(p);
+        }
+
+        projectilesDestroyed.clear();
+
         updateSpeed(playerHero);
 
         world.step(1f/60f, 6, 2);

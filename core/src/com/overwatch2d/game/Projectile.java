@@ -1,6 +1,8 @@
 package com.overwatch2d.game;
 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -19,6 +21,9 @@ class Projectile extends Actor {
 
         setPosition(initialX, initialY);
 
+        // insert particles here
+        // GameScreen.stage.addActor(new Cursor(initialX, initialY));
+
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
         bodyDef.position.set(getX() / Config.PIXELS_TO_METERS, getY() / Config.PIXELS_TO_METERS);
@@ -31,6 +36,8 @@ class Projectile extends Actor {
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.density = 0.01f;
+        fixtureDef.filter.categoryBits = Config.PROJECTILE_ENTITY;
+        fixtureDef.filter.maskBits = Config.HERO_ENTITY;
 
         physicsBody.createFixture(fixtureDef);
         physicsBody.setBullet(true);
@@ -45,6 +52,8 @@ class Projectile extends Actor {
         ) * 180.0d / Math.PI;
 
         physicsBody.setFixedRotation(true);
+
+        physicsBody.setUserData(this);
 
         physicsBody.setTransform(physicsBody.getWorldCenter(), (float)Math.toRadians(degrees));
 
@@ -83,5 +92,10 @@ class Projectile extends Actor {
 
     public Body getBody() {
         return physicsBody;
+    }
+
+    public void hit(Hero hitHero) {
+        GameScreen.projectilesDestroyed.add(this);
+        this.remove();
     }
 }

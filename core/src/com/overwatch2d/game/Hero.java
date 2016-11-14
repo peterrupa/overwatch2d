@@ -11,6 +11,8 @@ class Hero extends Actor {
     private Texture texture = new Texture(Gdx.files.internal("actor.png"));
     private Body physicsBody;
     private float speed = 3f;
+    private float projectileSpawnDistance = 0.175f;
+    private float projectileXOffset = 0.25f;
 
     Hero(float initialX, float initialY) {
         setSize(texture.getWidth(), texture.getHeight());
@@ -31,11 +33,14 @@ class Hero extends Actor {
         fixtureDef.density = 1f;
         fixtureDef.friction = 100f;
         fixtureDef.restitution = 0f;
+        fixtureDef.filter.categoryBits = Config.HERO_ENTITY;
+        fixtureDef.filter.maskBits = Config.HERO_ENTITY | Config.PROJECTILE_ENTITY;
 
         physicsBody.setLinearDamping(5f);
         physicsBody.setAngularDamping(5f);
 
         physicsBody.createFixture(fixtureDef);
+        physicsBody.setUserData(this);
 
         shape.dispose();
 
@@ -80,6 +85,16 @@ class Hero extends Actor {
         Vector3 hoverCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         Vector3 position = GameScreen.camera.unproject(hoverCoordinates);
 
-        GameScreen.projectiles.add(new Projectile(physicsBody.getWorldCenter().x * Config.PIXELS_TO_METERS, physicsBody.getWorldCenter().y * Config.PIXELS_TO_METERS, position.x, position.y));
+        double angle = Math.atan2(
+            position.y / Config.PIXELS_TO_METERS - physicsBody.getWorldCenter().y,
+            position.x / Config.PIXELS_TO_METERS - physicsBody.getWorldCenter().x
+        ) * 180.0d / Math.PI;
+
+        GameScreen.projectiles.add(new Projectile(
+            ((physicsBody.getWorldCenter().x + projectileXOffset * (float)Math.cos(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.cos(Math.toRadians(angle))) * Config.PIXELS_TO_METERS,
+            ((physicsBody.getWorldCenter().y + projectileXOffset * (float)Math.sin(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.sin(Math.toRadians(angle))) * Config.PIXELS_TO_METERS,
+            position.x,
+            position.y
+        ));
     }
 }

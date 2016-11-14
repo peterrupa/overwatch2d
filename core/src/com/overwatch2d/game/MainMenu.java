@@ -38,7 +38,7 @@ class MainMenu implements Screen, InputProcessor {
 
         menuSound = Gdx.audio.newSound(Gdx.files.internal("menu.mp3"));
 
-        menuSound.play();
+//        menuSound.play();
 
         Image background = new Image(new Texture(Gdx.files.internal("background/menubackground.jpg")));
         background.setSize(w, h);
