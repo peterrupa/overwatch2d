@@ -19,14 +19,15 @@ import java.util.ArrayList;
 class GameScreen implements Screen, InputProcessor {
     private final Overwatch2D game;
 
-    private Stage stage;
-    private OrthographicCamera camera;
+    static Stage stage;
+    static OrthographicCamera camera;
     private TiledMapRenderer tiledMapRenderer;
 
-    private ArrayList<Hero> heroes = new ArrayList<>();
+    static ArrayList<Hero> heroes = new ArrayList<Hero>();
+    static ArrayList<Projectile> projectiles = new ArrayList<Projectile>();
     private Hero playerHero;
 
-    private World world;
+    static World world;
 
     private boolean WHold = false;
     private boolean AHold = false;
@@ -55,15 +56,11 @@ class GameScreen implements Screen, InputProcessor {
         // create physics world
         world = new World(new Vector2(0, 0), true);
 
-        heroes.add(new Hero(world, 1100, 1100));
-        heroes.add(new Hero(world, 1200, 1200));
-        heroes.add(new Hero(world, 1300, 1200));
+        heroes.add(new Hero(1100, 1100));
+        heroes.add(new Hero(1200, 1200));
+        heroes.add(new Hero(1300, 1200));
 
         playerHero = heroes.get(0);
-
-        for(Hero hero: heroes) {
-            stage.addActor(hero);
-        }
 
         debugRenderer = new Box2DDebugRenderer();
     }
@@ -86,6 +83,12 @@ class GameScreen implements Screen, InputProcessor {
             hero.setRotation((float)Math.toDegrees(hero.getBody().getAngle()));
         }
 
+        for(Projectile projectile: projectiles) {
+            projectile.setPosition(projectile.getBody().getPosition().x * Config.PIXELS_TO_METERS, projectile.getBody().getPosition().y * Config.PIXELS_TO_METERS);
+
+            projectile.setRotation((float)Math.toDegrees(projectile.getBody().getAngle()));
+        }
+
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -98,8 +101,8 @@ class GameScreen implements Screen, InputProcessor {
             mouseCoordinates.x / Config.PIXELS_TO_METERS - playerHero.getBody().getWorldCenter().x
         ) * 180.0d / Math.PI;
 
-        camera.position.x = playerHero.getX() + 1.5f * Config.PIXELS_TO_METERS * (float)Math.cos(Math.toRadians(angle));
-        camera.position.y = playerHero.getY() + 1.5f * Config.PIXELS_TO_METERS * (float)Math.sin(Math.toRadians(angle));
+        camera.position.x = playerHero.getX() + Config.CAMERA_OFFSET * Config.PIXELS_TO_METERS * (float)Math.cos(Math.toRadians(angle));
+        camera.position.y = playerHero.getY() + Config.CAMERA_OFFSET * Config.PIXELS_TO_METERS * (float)Math.sin(Math.toRadians(angle));
 
         camera.update();
 
@@ -218,6 +221,8 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        playerHero.firePrimary();
+
         return false;
     }
 

@@ -3,16 +3,18 @@ package com.overwatch2d.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 
-class Hero extends Actor {
-    private Texture texture = new Texture(Gdx.files.internal("actor.png"));
+class Projectile extends Actor {
+    private Texture texture = new Texture(Gdx.files.internal("projectiles/sampleBullet.png"));
     private Body physicsBody;
-    private float speed = 3f;
+    private float speed = 0.01f;
 
-    Hero(float initialX, float initialY) {
+    Projectile(float initialX, float initialY, float destX, float destY) {
         setSize(texture.getWidth(), texture.getHeight());
 
         setPosition(initialX, initialY);
@@ -28,25 +30,36 @@ class Hero extends Actor {
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
-        fixtureDef.density = 1f;
-        fixtureDef.friction = 100f;
-        fixtureDef.restitution = 0f;
-
-        physicsBody.setLinearDamping(5f);
-        physicsBody.setAngularDamping(5f);
+        fixtureDef.density = 0.01f;
 
         physicsBody.createFixture(fixtureDef);
+        physicsBody.setBullet(true);
 
         shape.dispose();
 
         GameScreen.stage.addActor(this);
+
+        double degrees = Math.atan2(
+                destY / Config.PIXELS_TO_METERS - physicsBody.getWorldCenter().y,
+                destX / Config.PIXELS_TO_METERS - physicsBody.getWorldCenter().x
+        ) * 180.0d / Math.PI;
+
+        physicsBody.setFixedRotation(true);
+
+        physicsBody.setTransform(physicsBody.getWorldCenter(), (float)Math.toRadians(degrees));
+
+        float xPoint = speed * (float)Math.cos(Math.toRadians(degrees));
+        float yPoint = speed * (float)Math.sin(Math.toRadians(degrees));
+
+        physicsBody.applyLinearImpulse(
+            xPoint,
+            yPoint,
+            physicsBody.getWorldCenter().x,
+            physicsBody.getWorldCenter().y,
+            true
+        );
     }
 
-    public void setBody(Body body) {
-        physicsBody = body;
-    }
-
-    @Override
     public void draw(Batch batch, float alpha){
         batch.draw(
             texture,
@@ -70,16 +83,5 @@ class Hero extends Actor {
 
     public Body getBody() {
         return physicsBody;
-    }
-
-    public float getSpeed() {
-        return speed;
-    }
-
-    public void firePrimary() {
-        Vector3 hoverCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
-        Vector3 position = GameScreen.camera.unproject(hoverCoordinates);
-
-        GameScreen.projectiles.add(new Projectile(physicsBody.getWorldCenter().x * Config.PIXELS_TO_METERS, physicsBody.getWorldCenter().y * Config.PIXELS_TO_METERS, position.x, position.y));
     }
 }
