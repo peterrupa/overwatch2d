@@ -4,6 +4,7 @@ import com.badlogic.gdx.*;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -39,6 +40,9 @@ class GameScreen implements Screen, InputProcessor {
 
     private Box2DDebugRenderer debugRenderer;
     private Matrix4 debugMatrix;
+
+    private ArrayList<ParticleEffect> particles = new ArrayList<ParticleEffect>();
+    private ArrayList<ParticleEffect> particlesDestroyed = new ArrayList<ParticleEffect>();
 
     private static Sound hitSound = Gdx.audio.newSound(Gdx.files.internal("sfx/hit/hit.mp3"));
 
@@ -103,7 +107,12 @@ class GameScreen implements Screen, InputProcessor {
                     projectile.hit(hitHero);
 
 //                    particles
-//                    stage.addActor(new Cursor(contact.getWorldManifold().getPoints()[0].x * Config.PIXELS_TO_METERS, contact.getWorldManifold().getPoints()[0].y * Config.PIXELS_TO_METERS));
+                    ParticleEffect pe = new ParticleEffect();
+                    pe.load(Gdx.files.internal("particles/gunshot.party"),Gdx.files.internal(""));
+                    pe.getEmitters().first().setPosition(contact.getWorldManifold().getPoints()[0].x * Config.PIXELS_TO_METERS, contact.getWorldManifold().getPoints()[0].y * Config.PIXELS_TO_METERS);
+                    pe.start();
+
+                    particles.add(pe);
                 }
             }
 
@@ -143,6 +152,10 @@ class GameScreen implements Screen, InputProcessor {
 
         world.step(1f/60f, 6, 2);
 
+        for(ParticleEffect pe: particles) {
+            pe.update(Gdx.graphics.getDeltaTime());
+        }
+
         for(Hero hero: heroes) {
             hero.setPosition(hero.getBody().getPosition().x * Config.PIXELS_TO_METERS, hero.getBody().getPosition().y * Config.PIXELS_TO_METERS);
 
@@ -181,8 +194,26 @@ class GameScreen implements Screen, InputProcessor {
                 Config.PIXELS_TO_METERS, 0);
 
         stage.draw();
+        stage.getBatch().begin();
 
-        debugRenderer.render(world, debugMatrix);
+        for(ParticleEffect pe: particles) {
+            pe.draw(stage.getBatch());
+
+            if (pe.isComplete()) {
+                particlesDestroyed.add(pe);
+                pe.dispose();
+            }
+        }
+
+        stage.getBatch().end();
+
+        for(ParticleEffect pe: particlesDestroyed) {
+            particles.remove(pe);
+        }
+
+        particlesDestroyed.clear();
+
+//        debugRenderer.render(world, debugMatrix);
 
         mouseMoved(Gdx.input.getX(), Gdx.input.getY());
     }
@@ -200,6 +231,9 @@ class GameScreen implements Screen, InputProcessor {
         }
         if(keycode == Input.Keys.A) {
             AHold = false;
+        }
+        if(keycode == Input.Keys.ESCAPE) {
+            Gdx.app.exit();
         }
 
         return false;

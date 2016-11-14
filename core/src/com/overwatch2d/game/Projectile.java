@@ -15,8 +15,12 @@ class Projectile extends Actor {
     private Texture texture = new Texture(Gdx.files.internal("projectiles/sampleBullet.png"));
     private Body physicsBody;
     private float speed = 0.01f;
+    private int damage = 4;
+    private Hero owner;
 
-    Projectile(float initialX, float initialY, float destX, float destY) {
+    Projectile(float initialX, float initialY, float destX, float destY, Hero owner) {
+        this.owner = owner;
+
         setSize(texture.getWidth(), texture.getHeight());
 
         setPosition(initialX, initialY);
@@ -95,6 +99,8 @@ class Projectile extends Actor {
     }
 
     public void hit(Hero hitHero) {
+        hitHero.damaged(damage, owner);
+
         GameScreen.projectilesDestroyed.add(this);
         this.remove();
     }

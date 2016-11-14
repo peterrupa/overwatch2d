@@ -5,16 +5,19 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 public class Overwatch2D extends Game {
-    SpriteBatch batch;
-    BitmapFont font;
+    static SpriteBatch batch;
+    static BitmapFont font;
+    static BitmapFont gamePlayerNameFont;
+    static ShapeRenderer shapeRenderer;
 
     public void create() {
         batch = new SpriteBatch();
-        font = new BitmapFont();
-
         font = createFont("fonts/bignoodletoo.ttf", 54);
+        gamePlayerNameFont = createFont("fonts/koverwatch.ttf", 18);
+        shapeRenderer = new ShapeRenderer();
 
         this.setScreen(new MainMenu(this));
     }

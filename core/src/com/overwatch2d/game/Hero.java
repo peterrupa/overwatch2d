@@ -1,11 +1,15 @@
 package com.overwatch2d.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.utils.Align;
 
 class Hero extends Actor {
     private Texture texture = new Texture(Gdx.files.internal("actor.png"));
@@ -13,8 +17,14 @@ class Hero extends Actor {
     private float speed = 3f;
     private float projectileSpawnDistance = 0.175f;
     private float projectileXOffset = 0.25f;
+    private String name = "xxHARAMBE619xx";
+    private int maxHP;
+    private int currentHP;
 
     Hero(float initialX, float initialY) {
+        this.maxHP = 200;
+        this.currentHP = 200;
+
         setSize(texture.getWidth(), texture.getHeight());
 
         setPosition(initialX, initialY);
@@ -53,6 +63,28 @@ class Hero extends Actor {
 
     @Override
     public void draw(Batch batch, float alpha){
+        GlyphLayout layout = new GlyphLayout();
+        layout.setText(Overwatch2D.gamePlayerNameFont, name, new Color(0.14f, 0.7098f, 0.74901f, 1), Gdx.graphics.getWidth(), Align.center, false);
+
+        Overwatch2D.gamePlayerNameFont.draw(batch, layout, getX() - Gdx.graphics.getWidth() / 2, getY() + 50);
+
+        batch.end();
+
+        Overwatch2D.shapeRenderer.setAutoShapeType(true);
+        Overwatch2D.shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
+
+        Overwatch2D.shapeRenderer.begin();
+        Overwatch2D.shapeRenderer.setColor(new Color(0.14f, 0.7098f, 0.74901f, 1));
+        Overwatch2D.shapeRenderer.rect(getX() - 80 / 2, getY() + 60, 80, 10);
+        Overwatch2D.shapeRenderer.end();
+
+        Overwatch2D.shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        Overwatch2D.shapeRenderer.setColor(new Color(0.14f, 0.7098f, 0.74901f, 1));
+        Overwatch2D.shapeRenderer.rect(getX() - 80 / 2, getY() + 60, 80f * ((float)this.currentHP/(float)this.maxHP), 10);
+        Overwatch2D.shapeRenderer.end();
+
+        batch.begin();
+
         batch.draw(
             texture,
             getX() - texture.getWidth() / 2,
@@ -91,10 +123,15 @@ class Hero extends Actor {
         ) * 180.0d / Math.PI;
 
         GameScreen.projectiles.add(new Projectile(
-            ((physicsBody.getWorldCenter().x + projectileXOffset * (float)Math.cos(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.cos(Math.toRadians(angle))) * Config.PIXELS_TO_METERS,
-            ((physicsBody.getWorldCenter().y + projectileXOffset * (float)Math.sin(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.sin(Math.toRadians(angle))) * Config.PIXELS_TO_METERS,
-            position.x,
-            position.y
+                ((physicsBody.getWorldCenter().x + projectileXOffset * (float)Math.cos(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.cos(Math.toRadians(angle))) * Config.PIXELS_TO_METERS,
+                ((physicsBody.getWorldCenter().y + projectileXOffset * (float)Math.sin(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.sin(Math.toRadians(angle))) * Config.PIXELS_TO_METERS,
+                position.x,
+                position.y,
+                this
         ));
+    }
+
+    public void damaged(int damage, Hero attacker) {
+        currentHP -= damage;
     }
 }
