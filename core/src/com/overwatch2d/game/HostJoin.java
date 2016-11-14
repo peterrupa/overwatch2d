@@ -1,5 +1,9 @@
 package com.overwatch2d.game;
 
+/**
+ * Created by peterbenedict on 11/11/16.
+ **/
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
@@ -17,16 +21,15 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
+public class HostJoin implements Screen, InputProcessor {
 
-class MainMenu implements Screen, InputProcessor {
     private final Overwatch2D game;
     private OrthographicCamera camera;
     private Stage stage;
-    private Sound menuSound;
 
-    MainMenu(final Overwatch2D gam) {
+    HostJoin(final Overwatch2D gam) {
         float w = Gdx.graphics.getWidth(),
-              h = Gdx.graphics.getHeight();
+                h = Gdx.graphics.getHeight();
 
         game = gam;
 
@@ -36,99 +39,92 @@ class MainMenu implements Screen, InputProcessor {
 
         stage = new Stage(new ExtendViewport(w, h, camera));
 
-        menuSound = Gdx.audio.newSound(Gdx.files.internal("menu.mp3"));
-
+        Sound menuSound = Gdx.audio.newSound(Gdx.files.internal("menu.mp3"));
         menuSound.play();
 
-        Image background = new Image(new Texture(Gdx.files.internal("background/menubackground.jpg")));
+        Image background = new Image(new Texture(Gdx.files.internal("background/backblue.png")));
         background.setSize(w, h);
 
         stage.addActor(background);
 
-        Image pharah = new Image(new Texture(Gdx.files.internal("images/pharah.png")));
-        pharah.setScale(0.6f);
-        pharah.setPosition(1030 - pharah.getWidth()/2, 500 - pharah.getHeight()/2);
-
-        stage.addActor(pharah);
-
         TextButtonStyle textStyle = new TextButtonStyle();
         textStyle.font = game.font;
 
-        TextButton play = new TextButton("Play", textStyle);
-        play.setPosition(50, 500 - play.getHeight()/2);
+        TextButton tutorial = new TextButton("Tutorial", textStyle);
+        tutorial.setPosition(290,400 - tutorial.getHeight()/2);
 
-        stage.addActor(play);
+        stage.addActor(tutorial);
 
-        final Image playGradient = new Image(new Texture(Gdx.files.internal("effects/button_gradient.png")));
-        playGradient.setScale(0.45f);
-        playGradient.setPosition(20, 560 - playGradient.getHeight()/2);
-        playGradient.setColor(1, 1, 1, 0);
+        final Image tutorialGradient = new Image(new Texture(Gdx.files.internal("effects/orange.jpg")));
+        tutorialGradient.setScale(0.45f);
+        tutorialGradient.setPosition(240, 450 - tutorialGradient.getHeight()/2);
+        tutorialGradient.setColor(1, 1, 1, 0);
 
-        stage.addActor(playGradient);
+        stage.addActor(tutorialGradient);
 
-        playGradient.addListener(new ClickListener() {
+        tutorialGradient.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y) {
-                game.setScreen(new HostJoin(game));
+                game.setScreen(new GameScreen(game));
                 dispose();
             }
 
             @Override
             public void enter(InputEvent e, float x, float y, int pointer, Actor fromActor) {
-                playGradient.setVisible(true);
-                playGradient.addAction(Actions.fadeIn(0.1f));
+                tutorialGradient.setVisible(true);
+                tutorialGradient.addAction(Actions.fadeIn(0.1f));
             }
 
             @Override
             public void exit(InputEvent e, float x, float y, int pointer, Actor fromActor) {
-                playGradient.addAction(Actions.fadeOut(0.1f));
+                tutorialGradient.addAction(Actions.fadeOut(0.1f));
             }
         });
 
-        TextButton sett = new TextButton("Settings", textStyle);
-        sett.setPosition(50, 410 - sett.getHeight()/2);
+        TextButton hgame = new TextButton("Host Game", textStyle);
+        hgame.setPosition(590,400 - hgame.getHeight()/2);
 
-        stage.addActor(sett);
+        stage.addActor(hgame);
 
-        final Image settGradient = new Image(new Texture(Gdx.files.internal("effects/button_gradient.png")));
-        settGradient.setScale(0.45f);
-        settGradient.setPosition(20, 470 - settGradient.getHeight()/2);
-        settGradient.setColor(1, 1, 1, 0);
+        final Image hgameGradient = new Image(new Texture(Gdx.files.internal("effects/orange.jpg")));
+        hgameGradient.setScale(0.45f);
+        hgameGradient.setPosition(540, 450 - hgameGradient.getHeight()/2);
+        hgameGradient.setColor(1, 1, 1, 0);
 
-        stage.addActor(settGradient);
+        stage.addActor(hgameGradient);
 
-        settGradient.addListener(new ClickListener() {
+        hgameGradient.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y) {
-                game.setScreen(new Settings(game));
+                game.setScreen(new GameScreen(game));
                 dispose();
             }
 
             @Override
             public void enter(InputEvent e, float x, float y, int pointer, Actor fromActor) {
-                settGradient.setVisible(true);
-                settGradient.addAction(Actions.fadeIn(0.1f));
+                hgameGradient.setVisible(true);
+                hgameGradient.addAction(Actions.fadeIn(0.1f));
             }
 
             @Override
             public void exit(InputEvent e, float x, float y, int pointer, Actor fromActor) {
-                settGradient.addAction(Actions.fadeOut(0.1f));
+                hgameGradient.addAction(Actions.fadeOut(0.1f));
             }
         });
 
-        TextButton exit = new TextButton("Exit", textStyle);
-        exit.setPosition(50, 320 - exit.getHeight()/2);
+        TextButton jgame = new TextButton("Join Game", textStyle);
+        jgame.setPosition(890, 400 - jgame.getHeight()/2);
 
-        stage.addActor(exit);
+        stage.addActor(jgame);
 
-        final Image exitGradient = new Image(new Texture(Gdx.files.internal("effects/button_gradient.png")));
-        exitGradient.setScale(0.45f);
-        exitGradient.setPosition(20, 380 - exitGradient.getHeight()/2);
-        exitGradient.setColor(1, 1, 1, 0);
+        final Image jgameGradient = new Image(new Texture(Gdx.files.internal("effects/orange.jpg")));
+        jgameGradient.setScale(0.45f);
+        jgameGradient.setPosition(840, 450 - jgameGradient.getHeight()/2);
+        jgameGradient.setColor(1, 1, 1, 0);
 
-        stage.addActor(exitGradient);
+        stage.addActor(jgameGradient);
 
-        exitGradient.addListener(new ClickListener() {
+        jgameGradient.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y) {
                 Gdx.app.exit();
@@ -136,13 +132,44 @@ class MainMenu implements Screen, InputProcessor {
 
             @Override
             public void enter(InputEvent e, float x, float y, int pointer, Actor fromActor) {
-                exitGradient.setVisible(true);
-                exitGradient.addAction(Actions.fadeIn(0.1f));
+                jgameGradient.setVisible(true);
+                jgameGradient.addAction(Actions.fadeIn(0.1f));
             }
 
             @Override
             public void exit(InputEvent e, float x, float y, int pointer, Actor fromActor) {
-                exitGradient.addAction(Actions.fadeOut(0.1f));
+                jgameGradient.addAction(Actions.fadeOut(0.1f));
+            }
+        });
+
+        TextButton back = new TextButton("Back", textStyle);
+        back.setPosition(890, 100 - back.getHeight()/2);
+
+        stage.addActor(back);
+
+        final Image backGradient = new Image(new Texture(Gdx.files.internal("effects/orange.jpg")));
+        backGradient.setScale(0.45f);
+        backGradient.setPosition(850, 150 - backGradient.getHeight()/2);
+        backGradient.setColor(1, 1, 1, 0);
+
+        stage.addActor(backGradient);
+
+        backGradient.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent e, float x, float y) {
+                game.setScreen(new MainMenu(game));
+                dispose();
+            }
+
+            @Override
+            public void enter(InputEvent e, float x, float y, int pointer, Actor fromActor) {
+                backGradient.setVisible(true);
+                backGradient.addAction(Actions.fadeIn(0.1f));
+            }
+
+            @Override
+            public void exit(InputEvent e, float x, float y, int pointer, Actor fromActor) {
+                backGradient.addAction(Actions.fadeOut(0.1f));
             }
         });
 
@@ -174,7 +201,7 @@ class MainMenu implements Screen, InputProcessor {
 
     @Override
     public boolean keyUp(int keycode) {
-        game.setScreen(new GameScreen(game));
+        game.setScreen(new HostJoin(game));
         dispose();
 
         return false;
@@ -234,9 +261,8 @@ class MainMenu implements Screen, InputProcessor {
     public void hide() {
 
     }
-
     @Override
     public void dispose() {
-        menuSound.stop();
+
     }
 }
