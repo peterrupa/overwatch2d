@@ -26,6 +26,7 @@ class GameScreen implements Screen, InputProcessor {
     static ArrayList<Hero> heroes = new ArrayList<Hero>();
     static ArrayList<Projectile> projectiles = new ArrayList<Projectile>();
     private Hero playerHero;
+    private Cursor cursor;
 
     static World world;
 
@@ -63,6 +64,15 @@ class GameScreen implements Screen, InputProcessor {
         playerHero = heroes.get(0);
 
         debugRenderer = new Box2DDebugRenderer();
+
+        Gdx.input.setCursorCatched(true);
+
+        Vector3 mouseCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+        Vector3 position = camera.unproject(mouseCoordinates);
+
+        cursor = new Cursor(position.x, position.y);
+
+        stage.addActor(cursor);
     }
 
     @Override
@@ -210,7 +220,6 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public void hide() {
-
     }
 
     @Override
@@ -238,8 +247,12 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
-        Vector3 hoverCoordinates = new Vector3(screenX, screenY, 0);
+        Gdx.input.setCursorPosition(Math.max(Math.min(screenX, Gdx.graphics.getWidth()), 0), Math.max(Math.min(screenY, Gdx.graphics.getHeight()), 0));
+
+        Vector3 hoverCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         Vector3 position = camera.unproject(hoverCoordinates);
+
+        cursor.setPosition(position.x, position.y);
 
         double degrees = Math.atan2(
             position.y / Config.PIXELS_TO_METERS - playerHero.getBody().getWorldCenter().y,
