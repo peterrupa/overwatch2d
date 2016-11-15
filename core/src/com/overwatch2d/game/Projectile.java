@@ -15,8 +15,9 @@ class Projectile extends Actor {
     private Texture texture = new Texture(Gdx.files.internal("projectiles/sampleBullet.png"));
     private Body physicsBody;
     private float speed = 0.01f;
-    private int damage = 4;
+    private int damage = 12;
     private Hero owner;
+    private float density = 0.01f;
 
     Projectile(float initialX, float initialY, float destX, float destY, Hero owner) {
         this.owner = owner;
@@ -39,7 +40,7 @@ class Projectile extends Actor {
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
-        fixtureDef.density = 0.01f;
+        fixtureDef.density = density;
         fixtureDef.filter.categoryBits = Config.PROJECTILE_ENTITY;
         fixtureDef.filter.maskBits = Config.HERO_ENTITY;
 

@@ -15,7 +15,7 @@ class Hero extends Actor {
     private Texture texture = new Texture(Gdx.files.internal("actor.png"));
     private Body physicsBody;
     private float speed = 3f;
-    private float projectileSpawnDistance = 0.175f;
+    private float projectileSpawnDistance = 0.170f;
     private float projectileXOffset = 0.25f;
     private String name = "xxHARAMBE619xx";
     private int maxHP;
@@ -122,13 +122,18 @@ class Hero extends Actor {
             position.x / Config.PIXELS_TO_METERS - physicsBody.getWorldCenter().x
         ) * 180.0d / Math.PI;
 
+        float initialX = ((physicsBody.getWorldCenter().x + projectileXOffset * (float)Math.cos(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.cos(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
+        float initialY = ((physicsBody.getWorldCenter().y + projectileXOffset * (float)Math.sin(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.sin(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
+
         GameScreen.projectiles.add(new Projectile(
-                ((physicsBody.getWorldCenter().x + projectileXOffset * (float)Math.cos(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.cos(Math.toRadians(angle))) * Config.PIXELS_TO_METERS,
-                ((physicsBody.getWorldCenter().y + projectileXOffset * (float)Math.sin(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.sin(Math.toRadians(angle))) * Config.PIXELS_TO_METERS,
-                position.x,
-                position.y,
-                this
+            initialX,
+            initialY,
+            position.x,
+            position.y,
+            this
         ));
+
+        GameScreen.addParticleGunshot(Gdx.files.internal("particles/gunfire_allied.party"), initialX, initialY, (float)angle, 10f);
     }
 
     public void damaged(int damage, Hero attacker) {

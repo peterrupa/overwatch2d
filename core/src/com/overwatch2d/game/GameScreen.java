@@ -2,9 +2,11 @@ package com.overwatch2d.game;
 
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
+import com.badlogic.gdx.graphics.g2d.ParticleEmitter;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -41,8 +43,8 @@ class GameScreen implements Screen, InputProcessor {
     private Box2DDebugRenderer debugRenderer;
     private Matrix4 debugMatrix;
 
-    private ArrayList<ParticleEffect> particles = new ArrayList<ParticleEffect>();
-    private ArrayList<ParticleEffect> particlesDestroyed = new ArrayList<ParticleEffect>();
+    private static ArrayList<ParticleEffect> particles = new ArrayList<ParticleEffect>();
+    private static ArrayList<ParticleEffect> particlesDestroyed = new ArrayList<ParticleEffect>();
 
     private static Sound hitSound = Gdx.audio.newSound(Gdx.files.internal("sfx/hit/hit.mp3"));
 
@@ -107,12 +109,11 @@ class GameScreen implements Screen, InputProcessor {
                     projectile.hit(hitHero);
 
 //                    particles
-                    ParticleEffect pe = new ParticleEffect();
-                    pe.load(Gdx.files.internal("particles/gunshot.party"),Gdx.files.internal(""));
-                    pe.getEmitters().first().setPosition(contact.getWorldManifold().getPoints()[0].x * Config.PIXELS_TO_METERS, contact.getWorldManifold().getPoints()[0].y * Config.PIXELS_TO_METERS);
-                    pe.start();
-
-                    particles.add(pe);
+                    addParticle(
+                        Gdx.files.internal("particles/gunshot_allied.party"),
+                        contact.getWorldManifold().getPoints()[0].x * Config.PIXELS_TO_METERS,
+                        contact.getWorldManifold().getPoints()[0].y * Config.PIXELS_TO_METERS
+                    );
                 }
             }
 
@@ -131,6 +132,29 @@ class GameScreen implements Screen, InputProcessor {
 
             }
         });
+    }
+
+    public static void addParticle(FileHandle file, float x, float y) {
+        ParticleEffect pe = new ParticleEffect();
+        pe.load(file, Gdx.files.internal(""));
+        pe.getEmitters().first().setPosition(x, y);
+        pe.start();
+
+        particles.add(pe);
+    }
+
+    public static void addParticleGunshot(FileHandle file, float x, float y, float angle, float spread) {
+        ParticleEffect pe = new ParticleEffect();
+        pe.load(file, Gdx.files.internal(""));
+
+        for(ParticleEmitter p: pe.getEmitters()) {
+            p.setPosition(x, y);
+        }
+
+        pe.getEmitters().first().getAngle().setHigh(angle - spread, angle + spread);
+        pe.start();
+
+        particles.add(pe);
     }
 
     @Override
@@ -259,6 +283,8 @@ class GameScreen implements Screen, InputProcessor {
 
     private void updateSpeed(Hero hero) {
         Body body = hero.getBody();
+
+        // @TODO: Preserve momentum
 
         if (WHold && !AHold && !DHold && !SHold) {
             body.setLinearVelocity(0f, hero.getSpeed());
