@@ -15,9 +15,11 @@ class Projectile extends Actor {
     private Texture texture = new Texture(Gdx.files.internal("projectiles/sampleBullet.png"));
     private Body physicsBody;
     private float speed = 0.01f;
-    private int damage = 12;
+    private int damage = 15;
     private Hero owner;
     private float density = 0.01f;
+    private float ttl = 0.5f;
+    private boolean hit = false;
 
     Projectile(float initialX, float initialY, float destX, float destY, Hero owner) {
         this.owner = owner;
@@ -25,9 +27,6 @@ class Projectile extends Actor {
         setSize(texture.getWidth(), texture.getHeight());
 
         setPosition(initialX, initialY);
-
-        // insert particles here
-        // GameScreen.stage.addActor(new Cursor(initialX, initialY));
 
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
@@ -75,6 +74,12 @@ class Projectile extends Actor {
     }
 
     public void draw(Batch batch, float alpha){
+        ttl -= Gdx.graphics.getDeltaTime();
+
+        if(ttl < 0) {
+            die();
+        }
+
         batch.draw(
             texture,
             getX() - texture.getWidth() / 2,
@@ -102,7 +107,17 @@ class Projectile extends Actor {
     public void hit(Hero hitHero) {
         hitHero.damaged(damage, owner);
 
+        hit = true;
+
+        die();
+    }
+
+    public void die() {
         GameScreen.projectilesDestroyed.add(this);
         this.remove();
+    }
+
+    public boolean isHit() {
+        return hit;
     }
 }

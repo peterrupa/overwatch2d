@@ -39,6 +39,7 @@ class GameScreen implements Screen, InputProcessor {
     private boolean AHold = false;
     private boolean SHold = false;
     private boolean DHold = false;
+    private boolean LeftMouseHold = false;
 
     private Box2DDebugRenderer debugRenderer;
     private Matrix4 debugMatrix;
@@ -75,8 +76,6 @@ class GameScreen implements Screen, InputProcessor {
 
         debugRenderer = new Box2DDebugRenderer();
 
-        Gdx.input.setCursorCatched(true);
-
         Vector3 mouseCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         Vector3 position = camera.unproject(mouseCoordinates);
 
@@ -106,7 +105,9 @@ class GameScreen implements Screen, InputProcessor {
                         hitHero = (Hero) contact.getFixtureA().getBody().getUserData();
                     }
 
-                    projectile.hit(hitHero);
+                    if(projectilesDestroyed.indexOf(projectile) < 0) {
+                        projectile.hit(hitHero);
+                    }
 
 //                    particles
                     addParticle(
@@ -165,6 +166,10 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public void render(float delta) {
+        if(LeftMouseHold) {
+            playerHero.firePrimary();
+        }
+
         for(Projectile p: projectilesDestroyed) {
             world.destroyBody(p.getBody());
             projectiles.remove(p);
@@ -237,7 +242,7 @@ class GameScreen implements Screen, InputProcessor {
 
         particlesDestroyed.clear();
 
-//        debugRenderer.render(world, debugMatrix);
+        debugRenderer.render(world, debugMatrix);
 
         mouseMoved(Gdx.input.getX(), Gdx.input.getY());
     }
@@ -286,40 +291,30 @@ class GameScreen implements Screen, InputProcessor {
 
         // @TODO: Preserve momentum
 
-        if (WHold && !AHold && !DHold && !SHold) {
-            body.setLinearVelocity(0f, hero.getSpeed());
+        if (WHold) {
+            body.applyForceToCenter(0f, hero.getSpeed(), true);
         }
-        else if (WHold && DHold && !AHold && !SHold) {
-            body.setLinearVelocity(hero.getSpeed(), hero.getSpeed());
+
+        if (SHold) {
+            body.applyForceToCenter(0f, -hero.getSpeed(), true);
         }
-        else if (WHold && DHold && !AHold && !SHold) {
-            body.setLinearVelocity(hero.getSpeed(), hero.getSpeed());
+
+        if (AHold) {
+            body.applyForceToCenter(-hero.getSpeed(), 0f, true);
         }
-        else if (!WHold && DHold && !AHold && !SHold) {
-            body.setLinearVelocity(hero.getSpeed(), 0);
+
+        if (DHold) {
+            body.applyForceToCenter(hero.getSpeed(), 0f, true);
         }
-        else if (!WHold && DHold && !AHold && SHold) {
-            body.setLinearVelocity(hero.getSpeed(), -hero.getSpeed());
-        }
-        else if (!WHold && !DHold && !AHold && SHold) {
-            body.setLinearVelocity(0f, -hero.getSpeed());
-        }
-        else if(!WHold && !DHold && AHold && SHold) {
-            body.setLinearVelocity(-hero.getSpeed(), -hero.getSpeed());
-        }
-        else if(!WHold && !DHold && AHold && !SHold) {
-            body.setLinearVelocity(-hero.getSpeed(), 0f);
-        }
-        else if(WHold && !DHold && AHold && !SHold) {
-            body.setLinearVelocity(-hero.getSpeed(), hero.getSpeed());
-        }
-        else if(!WHold && !DHold && !AHold && !SHold) {
-            body.setLinearVelocity(0f, 0f);
+
+        if(!WHold && !DHold && !AHold && !SHold) {
+            body.applyForceToCenter(0, 0f, true);
         }
     }
 
     @Override
     public void show() {
+        Gdx.input.setCursorCatched(true);
     }
 
     @Override
@@ -328,10 +323,12 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public void pause() {
+        Gdx.input.setCursorCatched(false);
     }
 
     @Override
     public void resume() {
+        Gdx.input.setCursorCatched(true);
     }
 
     @Override
@@ -346,13 +343,15 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        playerHero.firePrimary();
+        LeftMouseHold = true;
 
         return false;
     }
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        LeftMouseHold = false;
+
         return false;
     }
 
