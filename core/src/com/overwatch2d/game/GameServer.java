@@ -66,25 +66,26 @@ public class GameServer implements Runnable, Constants {
     }
 
     public void run(){
-        while(true){
+        while(true) {
 
             byte[] bytes = new byte[256];
             DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
-            try{
+            try {
                 serverSocket.receive(packet);
-            }catch(Exception ioe){}
+            } catch (Exception ioe) {
+            }
 
             playerData = new String(bytes);
             playerData = playerData.trim(); //remove excess bytes
 
-            switch(gameStage){
+            switch (gameStage) {
                 case WAITING_FOR_PLAYERS:
 
-                    if (playerData.startsWith("CONNECT")){
+                    if (playerData.startsWith("CONNECT")) {
                         String tokens[] = playerData.split(" ");
                         Player player = new Player(tokens[1], packet.getAddress(), packet.getPort());
                         System.out.println("Player connected: " + tokens[1]);
-                        game.update(tokens[1].trim(),player);
+                        game.update(tokens[1].trim(), player);
                         broadcast("CONNECTED " + tokens[1]);
                         playerCount++;
                     }
@@ -93,12 +94,12 @@ public class GameServer implements Runnable, Constants {
                 case GAME_START:
                     System.out.println("Game State: START");
                     broadcast("START");
-                    gameStage=IN_PROGRESS;
+                    gameStage = IN_PROGRESS;
                     break;
 
                 case IN_PROGRESS:
 
-                    if (playerData.startsWith("PLAYER")){
+                    if (playerData.startsWith("PLAYER")) {
                         //Tokenize:
                         //The format: PLAYER <player name> <x> <y>
                         String[] playerInfo = playerData.split(" ");
@@ -106,7 +107,7 @@ public class GameServer implements Runnable, Constants {
                         int x = Integer.parseInt(playerInfo[2].trim());
                         int y = Integer.parseInt(playerInfo[3].trim());
                         //Get the player from the game state
-                        Player player = (Player)game.getPlayers().get(pname);
+                        Player player = (Player) game.getPlayers().get(pname);
                         //Update the game state
                         game.update(pname, player);
                         //Send to all the updated game state
@@ -115,7 +116,6 @@ public class GameServer implements Runnable, Constants {
                     break;
             }
         }
-
 
     }
 }
