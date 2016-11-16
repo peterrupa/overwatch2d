@@ -107,14 +107,14 @@ class GameScreen implements Screen, InputProcessor {
 
                     if(projectilesDestroyed.indexOf(projectile) < 0) {
                         projectile.hit(hitHero);
+
+                        addParticle(
+                            Gdx.files.internal("particles/gunshot_allied.party"),
+                            contact.getWorldManifold().getPoints()[0].x * Config.PIXELS_TO_METERS,
+                            contact.getWorldManifold().getPoints()[0].y * Config.PIXELS_TO_METERS
+                        );
                     }
 
-//                    particles
-                    addParticle(
-                        Gdx.files.internal("particles/gunshot_allied.party"),
-                        contact.getWorldManifold().getPoints()[0].x * Config.PIXELS_TO_METERS,
-                        contact.getWorldManifold().getPoints()[0].y * Config.PIXELS_TO_METERS
-                    );
                 }
             }
 
@@ -242,7 +242,7 @@ class GameScreen implements Screen, InputProcessor {
 
         particlesDestroyed.clear();
 
-        debugRenderer.render(world, debugMatrix);
+//        debugRenderer.render(world, debugMatrix);
 
         mouseMoved(Gdx.input.getX(), Gdx.input.getY());
     }
