@@ -1,5 +1,4 @@
 package com.overwatch2d.game;
-import com.badlogic.gdx.Game;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -7,6 +6,7 @@ import java.util.Map;
 
 /**
  * Created by geeca on 11/16/16.
+ * Source from CircleWars (Hermocilla)
  * This class contains the state of the game
  * The game state refers to the current position of the players
  */

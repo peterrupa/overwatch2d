@@ -1,10 +1,12 @@
 package com.overwatch2d.game;
-
 import java.net.InetAddress;
 
 /**
  * Created by geeca on 11/16/16.
+ * Reference CircleWars (Hermocilla)
+ * Network of players
  */
+
 public class Player {
 
     private InetAddress address;
@@ -29,6 +31,15 @@ public class Player {
 
     public Hero getHero(){
         return hero;
+    }
+
+    public String toString(){
+        String str = "";
+        str += "PLAYER ";
+        str += name+" ";
+        str += getHero().getX() + " ";
+        str += getHero().getY() ;
+        return str;
     }
 
 
