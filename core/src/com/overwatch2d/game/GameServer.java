@@ -107,8 +107,6 @@ public class GameServer implements Runnable, Constants {
                         int y = Integer.parseInt(playerInfo[3].trim());
                         //Get the player from the game state
                         Player player = (Player)game.getPlayers().get(pname);
-                        player.updateX();
-                        player.updateY();
                         //Update the game state
                         game.update(pname, player);
                         //Send to all the updated game state
