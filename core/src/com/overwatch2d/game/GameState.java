@@ -24,9 +24,9 @@ public class GameState {
     public String toString(){
         String val = "";
         for(Iterator ite = players.keySet().iterator(); ite.hasNext();){
-            String name=(String)ite.next();
-            Player player=(Player)players.get(name);
-            val+=player.toString()+":";
+            String name = (String)ite.next();
+            Player player = (Player)players.get(name);
+            val += player.toString()+":";
         }
         return val;
     }

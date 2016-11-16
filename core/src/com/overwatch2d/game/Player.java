@@ -13,6 +13,9 @@ public class Player {
     private int port;
     private String name;
     private Hero hero;
+    float x;
+    float y;
+
 
     //constructor
     public Player(String name, InetAddress address, int port){
@@ -33,12 +36,20 @@ public class Player {
         return hero;
     }
 
+    public void updateX(){
+        x = getHero().getBody().getWorldCenter().x;
+    }
+
+    public void updateY(){
+        y = getHero().getBody().getWorldCenter().y;
+    }
+
     public String toString(){
         String str = "";
         str += "PLAYER ";
         str += name+" ";
-        str += getHero().getX() + " ";
-        str += getHero().getY() ;
+        str += getHero().getBody().getWorldCenter().x + " ";
+        str += getHero().getBody().getWorldCenter().y ;
         return str;
     }
 
