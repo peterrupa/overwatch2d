@@ -1,8 +1,12 @@
 package com.overwatch2d.game;
 
 import com.badlogic.gdx.*;
+import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.ParticleEffect;
+import com.badlogic.gdx.graphics.g2d.ParticleEmitter;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -25,6 +29,7 @@ class GameScreen implements Screen, InputProcessor {
 
     static ArrayList<Hero> heroes = new ArrayList<Hero>();
     static ArrayList<Projectile> projectiles = new ArrayList<Projectile>();
+    static ArrayList<Projectile> projectilesDestroyed = new ArrayList<Projectile>();
     private Hero playerHero;
     private Cursor cursor;
 
@@ -37,6 +42,11 @@ class GameScreen implements Screen, InputProcessor {
 
     private Box2DDebugRenderer debugRenderer;
     private Matrix4 debugMatrix;
+
+    private static ArrayList<ParticleEffect> particles = new ArrayList<ParticleEffect>();
+    private static ArrayList<ParticleEffect> particlesDestroyed = new ArrayList<ParticleEffect>();
+
+    private static Sound hitSound = Gdx.audio.newSound(Gdx.files.internal("sfx/hit/hit.mp3"));
 
     GameScreen(final Overwatch2D gam) {
         game = gam;
@@ -73,6 +83,78 @@ class GameScreen implements Screen, InputProcessor {
         cursor = new Cursor(position.x, position.y);
 
         stage.addActor(cursor);
+
+        world.setContactListener(new ContactListener() {
+            @Override
+            public void beginContact(Contact contact) {
+                if((contact.getFixtureA().getBody().getUserData() instanceof Projectile &&
+                    contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
+                   (contact.getFixtureA().getBody().getUserData() instanceof Hero &&
+                    contact.getFixtureB().getBody().getUserData() instanceof Projectile)
+                ) {
+                    hitSound.play();
+
+                    Projectile projectile;
+                    Hero hitHero;
+
+                    if(contact.getFixtureA().getBody().getUserData() instanceof Projectile) {
+                        projectile = (Projectile) contact.getFixtureA().getBody().getUserData();
+                        hitHero = (Hero) contact.getFixtureB().getBody().getUserData();
+                    }
+                    else {
+                        projectile = (Projectile) contact.getFixtureB().getBody().getUserData();
+                        hitHero = (Hero) contact.getFixtureA().getBody().getUserData();
+                    }
+
+                    projectile.hit(hitHero);
+
+//                    particles
+                    addParticle(
+                        Gdx.files.internal("particles/gunshot_allied.party"),
+                        contact.getWorldManifold().getPoints()[0].x * Config.PIXELS_TO_METERS,
+                        contact.getWorldManifold().getPoints()[0].y * Config.PIXELS_TO_METERS
+                    );
+                }
+            }
+
+            @Override
+            public void endContact(Contact contact) {
+
+            }
+
+            @Override
+            public void preSolve(Contact contact, Manifold oldManifold) {
+
+            }
+
+            @Override
+            public void postSolve(Contact contact, ContactImpulse impulse) {
+
+            }
+        });
+    }
+
+    public static void addParticle(FileHandle file, float x, float y) {
+        ParticleEffect pe = new ParticleEffect();
+        pe.load(file, Gdx.files.internal(""));
+        pe.getEmitters().first().setPosition(x, y);
+        pe.start();
+
+        particles.add(pe);
+    }
+
+    public static void addParticleGunshot(FileHandle file, float x, float y, float angle, float spread) {
+        ParticleEffect pe = new ParticleEffect();
+        pe.load(file, Gdx.files.internal(""));
+
+        for(ParticleEmitter p: pe.getEmitters()) {
+            p.setPosition(x, y);
+        }
+
+        pe.getEmitters().first().getAngle().setHigh(angle - spread, angle + spread);
+        pe.start();
+
+        particles.add(pe);
     }
 
     @Override
@@ -83,9 +165,20 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public void render(float delta) {
+        for(Projectile p: projectilesDestroyed) {
+            world.destroyBody(p.getBody());
+            projectiles.remove(p);
+        }
+
+        projectilesDestroyed.clear();
+
         updateSpeed(playerHero);
 
         world.step(1f/60f, 6, 2);
+
+        for(ParticleEffect pe: particles) {
+            pe.update(Gdx.graphics.getDeltaTime());
+        }
 
         for(Hero hero: heroes) {
             hero.setPosition(hero.getBody().getPosition().x * Config.PIXELS_TO_METERS, hero.getBody().getPosition().y * Config.PIXELS_TO_METERS);
@@ -125,8 +218,26 @@ class GameScreen implements Screen, InputProcessor {
                 Config.PIXELS_TO_METERS, 0);
 
         stage.draw();
+        stage.getBatch().begin();
 
-        debugRenderer.render(world, debugMatrix);
+        for(ParticleEffect pe: particles) {
+            pe.draw(stage.getBatch());
+
+            if (pe.isComplete()) {
+                particlesDestroyed.add(pe);
+                pe.dispose();
+            }
+        }
+
+        stage.getBatch().end();
+
+        for(ParticleEffect pe: particlesDestroyed) {
+            particles.remove(pe);
+        }
+
+        particlesDestroyed.clear();
+
+//        debugRenderer.render(world, debugMatrix);
 
         mouseMoved(Gdx.input.getX(), Gdx.input.getY());
     }
@@ -144,6 +255,9 @@ class GameScreen implements Screen, InputProcessor {
         }
         if(keycode == Input.Keys.A) {
             AHold = false;
+        }
+        if(keycode == Input.Keys.ESCAPE) {
+            Gdx.app.exit();
         }
 
         return false;
@@ -169,6 +283,8 @@ class GameScreen implements Screen, InputProcessor {
 
     private void updateSpeed(Hero hero) {
         Body body = hero.getBody();
+
+        // @TODO: Preserve momentum
 
         if (WHold && !AHold && !DHold && !SHold) {
             body.setLinearVelocity(0f, hero.getSpeed());

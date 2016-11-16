@@ -1,6 +1,8 @@
 package com.overwatch2d.game;
 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -13,11 +15,19 @@ class Projectile extends Actor {
     private Texture texture = new Texture(Gdx.files.internal("projectiles/sampleBullet.png"));
     private Body physicsBody;
     private float speed = 0.01f;
+    private int damage = 12;
+    private Hero owner;
+    private float density = 0.01f;
 
-    Projectile(float initialX, float initialY, float destX, float destY) {
+    Projectile(float initialX, float initialY, float destX, float destY, Hero owner) {
+        this.owner = owner;
+
         setSize(texture.getWidth(), texture.getHeight());
 
         setPosition(initialX, initialY);
+
+        // insert particles here
+        // GameScreen.stage.addActor(new Cursor(initialX, initialY));
 
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
@@ -30,7 +40,9 @@ class Projectile extends Actor {
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
-        fixtureDef.density = 0.01f;
+        fixtureDef.density = density;
+        fixtureDef.filter.categoryBits = Config.PROJECTILE_ENTITY;
+        fixtureDef.filter.maskBits = Config.HERO_ENTITY;
 
         physicsBody.createFixture(fixtureDef);
         physicsBody.setBullet(true);
@@ -45,6 +57,8 @@ class Projectile extends Actor {
         ) * 180.0d / Math.PI;
 
         physicsBody.setFixedRotation(true);
+
+        physicsBody.setUserData(this);
 
         physicsBody.setTransform(physicsBody.getWorldCenter(), (float)Math.toRadians(degrees));
 
@@ -83,5 +97,12 @@ class Projectile extends Actor {
 
     public Body getBody() {
         return physicsBody;
+    }
+
+    public void hit(Hero hitHero) {
+        hitHero.damaged(damage, owner);
+
+        GameScreen.projectilesDestroyed.add(this);
+        this.remove();
     }
 }
