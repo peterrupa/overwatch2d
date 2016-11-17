@@ -65,6 +65,10 @@ public class GameServer implements Runnable, Constants {
         }
     }
 
+    public void setGameState(int setGameState){
+        this.gameStage = gameStage;
+    }
+
     public void run(){
         while(true) {
 

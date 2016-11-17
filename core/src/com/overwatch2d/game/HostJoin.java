@@ -96,7 +96,9 @@ public class HostJoin implements Screen, InputProcessor {
         hgameGradient.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y) {
-                game.setScreen(new GameScreen(game));
+                game.setScreen(new HostScreen(game) {
+
+                });
                 dispose();
             }
 
