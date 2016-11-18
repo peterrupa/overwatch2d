@@ -5,13 +5,17 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.ParticleEmitter;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
@@ -24,6 +28,7 @@ class GameScreen implements Screen, InputProcessor {
     private final Overwatch2D game;
 
     static Stage stage;
+    static Stage UIStage;
     static OrthographicCamera camera;
     private TiledMapRenderer tiledMapRenderer;
 
@@ -49,6 +54,13 @@ class GameScreen implements Screen, InputProcessor {
 
     private static Sound hitSound = Gdx.audio.newSound(Gdx.files.internal("sfx/hit/hit.mp3"));
 
+    private Label healthLabel;
+    private Label ammoCountLabel;
+    private Label gunNameLabel;
+
+    private Texture heroPortraitTexture;
+    private Sprite heroPortraitSprite;
+
     GameScreen(final Overwatch2D gam) {
         game = gam;
 
@@ -60,6 +72,7 @@ class GameScreen implements Screen, InputProcessor {
         camera.update();
 
         stage = new Stage(new ExtendViewport(w, h, camera));
+        UIStage = new Stage();
 
         TiledMap tiledMap = new TmxMapLoader().load("sampleMap.tmx");
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
@@ -133,6 +146,36 @@ class GameScreen implements Screen, InputProcessor {
 
             }
         });
+
+        // UI Elements
+        Label.LabelStyle healthStyle = new Label.LabelStyle();
+        healthStyle.font = game.gameUIHealthFont;
+
+        healthLabel = new Label("200/200", healthStyle);
+        healthLabel.setPosition(160, 60);
+
+        UIStage.addActor(healthLabel);
+
+        Label.LabelStyle ammoCountStyle = new Label.LabelStyle();
+        ammoCountStyle.font = game.gameUIAmmoCountFont;
+
+        ammoCountLabel = new Label(playerHero.getCurrentAmmo() + "/" + playerHero.getMaxAmmo(), ammoCountStyle);
+        ammoCountLabel.setPosition(1160, 50);
+
+        UIStage.addActor(ammoCountLabel);
+
+        Label.LabelStyle gunNameStyle = new Label.LabelStyle();
+        gunNameStyle.font = game.gameUIGunNameFont;
+
+        gunNameLabel = new Label("Pulse Rifle", gunNameStyle);
+        gunNameLabel.setPosition(1160, 120);
+
+        UIStage.addActor(gunNameLabel);
+
+        heroPortraitTexture = playerHero.getPortraitTexture();
+        heroPortraitSprite = new Sprite(heroPortraitTexture);
+        heroPortraitSprite.setPosition(100 - heroPortraitSprite.getWidth()/2, 90 - heroPortraitSprite.getHeight()/2);
+        heroPortraitSprite.setScale(0.5f);
     }
 
     public static void addParticle(FileHandle file, float x, float y) {
@@ -166,6 +209,9 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public void render(float delta) {
+        healthLabel.setText(playerHero.getCurrentHealth() + "/" + playerHero.getMaxHealth());
+        ammoCountLabel.setText(playerHero.getCurrentAmmo() + "/" + playerHero.getMaxAmmo());
+
         if(LeftMouseHold) {
             playerHero.firePrimary();
         }
@@ -197,7 +243,7 @@ class GameScreen implements Screen, InputProcessor {
             projectile.setRotation((float)Math.toDegrees(projectile.getBody().getAngle()));
         }
 
-        Gdx.gl.glClearColor(1, 1, 1, 1);
+        Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
@@ -235,6 +281,12 @@ class GameScreen implements Screen, InputProcessor {
         }
 
         stage.getBatch().end();
+
+        UIStage.draw();
+
+        UIStage.getBatch().begin();
+        heroPortraitSprite.draw(UIStage.getBatch());
+        UIStage.getBatch().end();
 
         for(ParticleEffect pe: particlesDestroyed) {
             particles.remove(pe);

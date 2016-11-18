@@ -22,8 +22,9 @@ class Hero extends Actor {
     private float projectileSpawnDistance = 0.30f;
     private float projectileXOffset = 0.25f;
     private String name = "xxHARAMBE619xx";
-    private int maxHP;
+    private int MAX_HEALTH;
     private int currentHP;
+    private Texture portrait = new Texture(Gdx.files.internal("portraits/soldier76.png"));
 
     private static Sound fireSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/fire.ogg"));
 
@@ -38,7 +39,7 @@ class Hero extends Actor {
     private static Sound reloadSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/reload.mp3"));
 
     Hero(float initialX, float initialY) {
-        this.maxHP = 200;
+        this.MAX_HEALTH = 200;
         this.currentHP = 200;
         this.replenishAmmo();
 
@@ -95,7 +96,7 @@ class Hero extends Actor {
 
         Overwatch2D.shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         Overwatch2D.shapeRenderer.setColor(new Color(0.14f, 0.7098f, 0.74901f, 1));
-        Overwatch2D.shapeRenderer.rect(getX() - 80 / 2, getY() + 60, Math.max(0, 80f * ((float)this.currentHP/(float)this.maxHP)), 10);
+        Overwatch2D.shapeRenderer.rect(getX() - 80 / 2, getY() + 60, Math.max(0, 80f * ((float)this.currentHP/(float)this.MAX_HEALTH)), 10);
         Overwatch2D.shapeRenderer.end();
 
         batch.begin();
@@ -192,5 +193,25 @@ class Hero extends Actor {
                 replenishAmmo();
             }
         }, TIME_TO_RELOAD);
+    }
+
+    public int getCurrentHealth() {
+        return currentHP;
+    }
+
+    public int getMaxHealth() {
+        return MAX_HEALTH;
+    }
+
+    public int getMaxAmmo() {
+        return MAX_BULLET_CAPACITY;
+    }
+
+    public int getCurrentAmmo() {
+        return currentBullets;
+    }
+
+    public Texture getPortraitTexture() {
+        return portrait;
     }
 }
