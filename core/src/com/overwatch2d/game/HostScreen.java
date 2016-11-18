@@ -54,7 +54,6 @@ public class HostScreen implements Screen{
         Label waitingLabel = new Label("Waiting for players..", style);
 
         waitingLabel.setPosition(500, 500);
-
         stage.addActor(waitingLabel);
 
         TextButton begin = new TextButton("Begin Game", textStyle);
