@@ -15,14 +15,15 @@ class Projectile extends Actor {
     private Texture texture = new Texture(Gdx.files.internal("projectiles/sampleBullet.png"));
     private Body physicsBody;
     private float speed = 0.01f;
-    private int damage = 15;
+    private int damage;
     private Hero owner;
     private float density = 0.01f;
     private float ttl = 0.5f;
     private boolean hit = false;
 
-    Projectile(float initialX, float initialY, float destX, float destY, Hero owner) {
+    Projectile(float initialX, float initialY, float destX, float destY, int damage, Hero owner) {
         this.owner = owner;
+        this.damage = damage;
 
         setSize(texture.getWidth(), texture.getHeight());
 
