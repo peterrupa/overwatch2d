@@ -18,7 +18,7 @@ import com.sun.xml.internal.bind.annotation.OverrideAnnotationOf;
 class Hero extends Actor {
     private Texture texture = new Texture(Gdx.files.internal("actor.png"));
     private Body physicsBody;
-    private float speed = 5f;
+    private float speed = 4f;
     private float projectileSpawnDistance = 0.30f;
     private float projectileXOffset = 0.25f;
     private String name = "xxHARAMBE619xx";
@@ -31,10 +31,16 @@ class Hero extends Actor {
     private boolean weaponCanFire = true;
     private float weaponFPS = 10f;
     private float weaponSpread = 20;
+    private final int MAX_BULLET_CAPACITY = 25;
+    private final float TIME_TO_RELOAD = 1.5f;
+    private final int DAMAGE_PER_SHOT = 15;
+    private int currentBullets;
+    private static Sound reloadSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/reload.mp3"));
 
     Hero(float initialX, float initialY) {
         this.maxHP = 200;
         this.currentHP = 200;
+        this.replenishAmmo();
 
         setSize(texture.getWidth(), texture.getHeight());
 
@@ -123,7 +129,7 @@ class Hero extends Actor {
     }
 
     public void firePrimary() {
-        if(weaponCanFire) {
+        if(weaponCanFire && currentBullets > 0) {
             Vector3 hoverCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
             Vector3 position = GameScreen.camera.unproject(hoverCoordinates);
 
@@ -143,6 +149,7 @@ class Hero extends Actor {
                 initialY,
                 position.x,
                 position.y,
+                DAMAGE_PER_SHOT,
                 this
             ));
 
@@ -152,16 +159,38 @@ class Hero extends Actor {
 
             weaponCanFire = false;
 
+            currentBullets--;
+
             Timer.schedule(new Timer.Task() {
                 @Override
                 public void run() {
                     weaponCanFire = true;
                 }
             }, 1f / weaponFPS);
+
+            // reload
+            if(currentBullets <= 0) {
+                reload();
+            }
         }
     }
 
     public void damaged(int damage, Hero attacker) {
         currentHP -= damage;
+    }
+
+    private void replenishAmmo() {
+        this.currentBullets = MAX_BULLET_CAPACITY;
+    }
+
+    private void reload() {
+        reloadSound.play();
+
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                replenishAmmo();
+            }
+        }, TIME_TO_RELOAD);
     }
 }
