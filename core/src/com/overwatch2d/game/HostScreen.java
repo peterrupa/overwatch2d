@@ -3,6 +3,7 @@ package com.overwatch2d.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -11,9 +12,12 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+
+import javax.swing.*;
 
 /**
  * Created by geeca on 11/17/16.
@@ -45,6 +49,13 @@ public class HostScreen implements Screen{
 
         TextButton.TextButtonStyle textStyle = new TextButton.TextButtonStyle();
         textStyle.font = game.font;
+
+        Label.LabelStyle style = new Label.LabelStyle(game.font, Color.WHITE);
+        Label waitingLabel = new Label("Waiting for players..", style);
+
+        waitingLabel.setPosition(500, 500);
+
+        stage.addActor(waitingLabel);
 
         TextButton begin = new TextButton("Begin Game", textStyle);
         begin.setPosition(890, begin.getHeight()/2);
