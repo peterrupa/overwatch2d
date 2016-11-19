@@ -14,6 +14,7 @@ public class Overwatch2D extends Game {
     static BitmapFont gameUIHealthFont;
     static BitmapFont gameUIAmmoCountFont;
     static BitmapFont gameUIGunNameFont;
+    static BitmapFont gameSelectionOKFont;
     static ShapeRenderer shapeRenderer;
 
     public void create() {
@@ -24,6 +25,7 @@ public class Overwatch2D extends Game {
         gameUIHealthFont = createFont("fonts/bignoodletoo.ttf", 50);
         gameUIAmmoCountFont = createFont("fonts/bignoodletoo.ttf", 70);
         gameUIGunNameFont = createFont("fonts/bignoodletoo.ttf", 14);
+        gameSelectionOKFont = createFont("fonts/koverwatch.ttf", 30);
 
         this.setScreen(new MainMenu(this));
     }

@@ -1,5 +1,6 @@
 package com.overwatch2d.game;
 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
@@ -27,9 +28,11 @@ class Hero extends Actor {
     private Texture portrait = new Texture(Gdx.files.internal("portraits/soldier76.png"));
 
     private static Sound fireSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/fire.ogg"));
+    private static Sound selectSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/spawn.ogg"));
 
     // @TODO: Port to a weapon class
     private boolean weaponCanFire = true;
+    private boolean isReloading = false;
     private float weaponFPS = 10f;
     private float weaponSpread = 20;
     private final int MAX_BULLET_CAPACITY = 25;
@@ -130,7 +133,7 @@ class Hero extends Actor {
     }
 
     public void firePrimary() {
-        if(weaponCanFire && currentBullets > 0) {
+        if(weaponCanFire && currentBullets > 0 && !isReloading) {
             Vector3 hoverCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
             Vector3 position = GameScreen.camera.unproject(hoverCoordinates);
 
@@ -184,13 +187,15 @@ class Hero extends Actor {
         this.currentBullets = MAX_BULLET_CAPACITY;
     }
 
-    private void reload() {
+    public void reload() {
         reloadSound.play();
+        isReloading = true;
 
         Timer.schedule(new Timer.Task() {
             @Override
             public void run() {
                 replenishAmmo();
+                isReloading = false;
             }
         }, TIME_TO_RELOAD);
     }
@@ -211,7 +216,20 @@ class Hero extends Actor {
         return currentBullets;
     }
 
+    public String getPlayerName() {
+        return name;
+    }
+
     public Texture getPortraitTexture() {
         return portrait;
+    }
+
+    public void playSelectedSound() {
+        Hero.selectSound.play();
+    }
+
+    public void dispose() {
+        GameScreen.heroesDestroyed.add(this);
+        this.remove();
     }
 }

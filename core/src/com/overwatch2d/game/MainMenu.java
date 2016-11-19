@@ -22,7 +22,7 @@ class MainMenu implements Screen, InputProcessor {
     private final Overwatch2D game;
     private OrthographicCamera camera;
     private Stage stage;
-    private Sound menuSound;
+    private Sound menuSound = Gdx.audio.newSound(Gdx.files.internal("menu.mp3"));;
 
     MainMenu(final Overwatch2D gam) {
         float w = Gdx.graphics.getWidth(),
@@ -35,8 +35,6 @@ class MainMenu implements Screen, InputProcessor {
         camera.update();
 
         stage = new Stage(new ExtendViewport(w, h, camera));
-
-        menuSound = Gdx.audio.newSound(Gdx.files.internal("menu.mp3"));
 
 //        menuSound.play();
 

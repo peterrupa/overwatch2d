@@ -39,9 +39,6 @@ public class HostScreen implements Screen{
 
         stage = new Stage(new ExtendViewport(w, h, camera));
 
-        Sound menuSound = Gdx.audio.newSound(Gdx.files.internal("menu.mp3"));
-        menuSound.play();
-
         Image background = new Image(new Texture(Gdx.files.internal("background/hostGame.jpg")));
         background.setSize(w, h);
 
