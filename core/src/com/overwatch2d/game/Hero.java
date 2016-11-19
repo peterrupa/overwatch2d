@@ -137,13 +137,16 @@ class Hero extends Actor {
             Vector3 hoverCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
             Vector3 position = GameScreen.camera.unproject(hoverCoordinates);
 
+            double angle = Math.atan2(
+                position.y / Config.PIXELS_TO_METERS - physicsBody.getWorldCenter().y,
+                position.x / Config.PIXELS_TO_METERS - physicsBody.getWorldCenter().x
+            ) * 180.0d / Math.PI;
+
+            position.x = physicsBody.getWorldCenter().x * Config.PIXELS_TO_METERS + 5f * (float)Math.cos(Math.toRadians(angle)) * Config.PIXELS_TO_METERS;
+            position.y = physicsBody.getWorldCenter().y * Config.PIXELS_TO_METERS + 5f * (float)Math.sin(Math.toRadians(angle)) * Config.PIXELS_TO_METERS;
+
             position.x = position.x + MathUtils.random(-weaponSpread, weaponSpread);
             position.y = position.y + MathUtils.random(-weaponSpread, weaponSpread);
-
-            double angle = Math.atan2(
-                    position.y / Config.PIXELS_TO_METERS - physicsBody.getWorldCenter().y,
-                    position.x / Config.PIXELS_TO_METERS - physicsBody.getWorldCenter().x
-            ) * 180.0d / Math.PI;
 
             float initialX = ((physicsBody.getWorldCenter().x + projectileXOffset * (float)Math.cos(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.cos(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
             float initialY = ((physicsBody.getWorldCenter().y + projectileXOffset * (float)Math.sin(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.sin(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
