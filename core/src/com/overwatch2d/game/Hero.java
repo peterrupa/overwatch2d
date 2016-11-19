@@ -188,16 +188,18 @@ class Hero extends Actor {
     }
 
     public void reload() {
-        reloadSound.play();
-        isReloading = true;
+        if(currentBullets < MAX_BULLET_CAPACITY) {
+            reloadSound.play();
+            isReloading = true;
 
-        Timer.schedule(new Timer.Task() {
-            @Override
-            public void run() {
-                replenishAmmo();
-                isReloading = false;
-            }
-        }, TIME_TO_RELOAD);
+            Timer.schedule(new Timer.Task() {
+                @Override
+                public void run() {
+                    replenishAmmo();
+                    isReloading = false;
+                }
+            }, TIME_TO_RELOAD);
+        }
     }
 
     public int getCurrentHealth() {
