@@ -191,7 +191,7 @@ class Hero extends Actor {
     }
 
     public void reload() {
-        if(currentBullets < MAX_BULLET_CAPACITY) {
+        if(currentBullets < MAX_BULLET_CAPACITY && !isReloading) {
             reloadSound.play();
             isReloading = true;
 

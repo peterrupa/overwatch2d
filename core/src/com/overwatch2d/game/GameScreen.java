@@ -19,6 +19,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
@@ -30,12 +31,18 @@ import java.util.ArrayList;
 class GameScreen implements Screen, InputProcessor {
     private final Overwatch2D game;
 
+    private final float HERO_SELECTION_DURATION = 21f;
+    private final float GAME_PREPARATION_DURATION = 60f;
+
     private final String PLAYER_NAME = "xxHARAMBE619xx";
 
     private final int HERO_SELECTION = 0;
     private final int IN_BATTLE = 1;
 
     private int state;
+
+    private boolean heroSelectionFinished = false;
+    private boolean preparationFinished = false;
 
     static Stage stage;
     static Stage UIStage;
@@ -65,18 +72,25 @@ class GameScreen implements Screen, InputProcessor {
     private static ArrayList<ParticleEffect> particlesDestroyed = new ArrayList<ParticleEffect>();
 
     private static Sound hitSound = Gdx.audio.newSound(Gdx.files.internal("sfx/hit/hit.mp3"));
+    private static Sound initSound = Gdx.audio.newSound(Gdx.files.internal("sfx/music/start.mp3"));
 
     private Label healthLabel;
     private Label ammoCountLabel;
     private Label gunNameLabel;
+    private Label countdownLabel;
 
     private Texture heroPortraitTexture;
     private Sprite heroPortraitSprite;
 
+    private TextButton okButton;
+
     private InputMultiplexer inputs;
+
+    private float countdown;
 
     GameScreen(final Overwatch2D gam) {
         game = gam;
+        this.countdown = HERO_SELECTION_DURATION;
 
         float w = Gdx.graphics.getWidth(),
               h = Gdx.graphics.getHeight();
@@ -166,6 +180,8 @@ class GameScreen implements Screen, InputProcessor {
         initSelectionStage();
 
         this.setState(HERO_SELECTION);
+
+        initSound.play();
     }
 
     public static void addParticle(FileHandle file, float x, float y) {
@@ -201,6 +217,20 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public void render(float delta) {
+        if(!heroSelectionFinished) {
+            countdown -= Gdx.graphics.getDeltaTime();
+
+            if(countdown < 1) {
+                heroSelectionFinished = true;
+
+                selectionStage.addActor(okButton);
+                countdownLabel.remove();
+            }
+            else {
+                countdownLabel.setText("Assemble your team: " + (int)Math.floor(countdown));
+            }
+        }
+
         if(playerHero != null) {
             healthLabel.setText(playerHero.getCurrentHealth() + "/" + playerHero.getMaxHealth());
             ammoCountLabel.setText(playerHero.getCurrentAmmo() + "/" + playerHero.getMaxAmmo());
@@ -383,8 +413,6 @@ class GameScreen implements Screen, InputProcessor {
     private void updateSpeed(Hero hero) {
         Body body = hero.getBody();
 
-        // @TODO: Preserve momentum
-
         if (WHold) {
             body.applyForceToCenter(0f, hero.getSpeed(), true);
         }
@@ -501,26 +529,41 @@ class GameScreen implements Screen, InputProcessor {
         TextButton.TextButtonStyle okStyle = new TextButton.TextButtonStyle();
         okStyle.font = game.gameSelectionOKFont;
 
-        TextButton okButton = new TextButton("OK", okStyle);
-        okButton.setPosition(650, 60);
-
-        float width = 300;
-        float height = 100;
-
-        okButton.setBounds(okButton.getX() - width/2, okButton.getY() - height/2, width, height);
+        okButton = new TextButton("OK", okStyle);
+        okButton.setPosition(Gdx.graphics.getWidth()/2, 60);
 
         okButton.clearListeners();
 
         okButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y) {
-                setState(IN_BATTLE);
-                spawnHero(new Hero(100, 100));
-                playerHero.playSelectedSound();
+                if(state == HERO_SELECTION) {
+                    setState(IN_BATTLE);
+                    spawnHero(new Hero(100, 100));
+                    playerHero.playSelectedSound();
+                }
             }
         });
 
-        selectionStage.addActor(okButton);
+        if(heroSelectionFinished) {
+            selectionStage.addActor(okButton);
+        }
+
+        Label.LabelStyle selectHeroStyle = new Label.LabelStyle();
+        selectHeroStyle.font = game.font;
+
+        Label selectHeroLabel = new Label("Select your Hero", selectHeroStyle);
+        selectHeroLabel.setPosition(40, 650);
+
+        selectionStage.addActor(selectHeroLabel);
+
+        Label.LabelStyle countdownStyle = new Label.LabelStyle();
+        countdownStyle.font = game.gameSelectionCountdownFont;
+
+        countdownLabel = new Label("", countdownStyle);
+        countdownLabel.setPosition(Gdx.graphics.getWidth()/2 - 70, 100);
+
+        selectionStage.addActor(countdownLabel);
     }
 
     private void spawnHero(Hero e) {
