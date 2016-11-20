@@ -18,6 +18,9 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
 import javax.swing.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 /**
  * Created by geeca on 11/17/16.
@@ -69,7 +72,27 @@ public class HostScreen implements Screen{
 
             @Override
             public void clicked(InputEvent e, float x, float y) {
-                game.setScreen(new GameScreen(game));
+                // temporary, hardcode players
+                ArrayList<Player> p = new ArrayList<Player>();
+
+                try {
+                    Player peter = new Player("Peter", InetAddress.getByName("192.168.0.1"), 4545);
+                    peter.setTeam(0);
+                    p.add(peter);
+
+                    Player erika = new Player("Erika", InetAddress.getByName("192.168.0.45"), 4545);
+                    erika.setTeam(0);
+                    p.add(erika);
+
+                    Player geeca = new Player("Geeca", InetAddress.getByName("192.168.0.41"), 4545);
+                    geeca.setTeam(1);
+                    p.add(geeca);
+                } catch (UnknownHostException e1) {
+                    e1.printStackTrace();
+                }
+
+                game.setScreen(new GameScreen(game, p));
+
                 dispose();
             }
 

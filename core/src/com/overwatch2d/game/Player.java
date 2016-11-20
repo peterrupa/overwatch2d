@@ -12,7 +12,8 @@ public class Player {
     private InetAddress address;
     private int port;
     private String name;
-    private Hero hero;
+    private Hero hero = null;
+    private int team = -1;
 
     //constructor
     public Player(String name, InetAddress address, int port){
@@ -33,13 +34,34 @@ public class Player {
         return hero;
     }
 
+    public int getTeam() {
+        return team;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setTeam(int team) {
+        this.team = team;
+    }
+
+    public void setHero(Hero h) {
+        this.hero = h;
+    }
 
     public String toString(){
         String str = "";
         str += "PLAYER ";
         str += name+" ";
-        str += getHero().getBody().getWorldCenter().x + " ";
-        str += getHero().getBody().getWorldCenter().y ;
+        str += "TEAM ";
+        str += team+" ";
+
+        if(getHero() != null) {
+            str += getHero().getBody().getWorldCenter().x + " ";
+            str += getHero().getBody().getWorldCenter().y ;
+        }
+
         return str;
     }
 

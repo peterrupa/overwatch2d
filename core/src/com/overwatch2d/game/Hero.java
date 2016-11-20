@@ -22,10 +22,10 @@ class Hero extends Actor {
     private float speed = 4f;
     private float projectileSpawnDistance = 0.30f;
     private float projectileXOffset = 0.25f;
-    private String name = "xxHARAMBE619xx";
     private int MAX_HEALTH;
     private int currentHP;
     private Texture portrait = new Texture(Gdx.files.internal("portraits/soldier76.png"));
+    private Player player;
 
     private static Sound fireSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/fire.ogg"));
     private static Sound selectSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/spawn.ogg"));
@@ -41,10 +41,11 @@ class Hero extends Actor {
     private int currentBullets;
     private static Sound reloadSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/reload.mp3"));
 
-    Hero(float initialX, float initialY) {
+    Hero(float initialX, float initialY, Player player) {
         this.MAX_HEALTH = 200;
         this.currentHP = 200;
         this.replenishAmmo();
+        this.player = player;
 
         setSize(texture.getWidth(), texture.getHeight());
 
@@ -62,8 +63,14 @@ class Hero extends Actor {
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.density = 1f;
-        fixtureDef.filter.categoryBits = Config.HERO_ENTITY;
-        fixtureDef.filter.maskBits = Config.HERO_ENTITY | Config.PROJECTILE_ENTITY;
+
+        if(getPlayer().getTeam() == 0) {
+            fixtureDef.filter.categoryBits = Config.HERO_ENTITY | Config.HERO_ENTITY_0;
+        }
+        else {
+            fixtureDef.filter.categoryBits = Config.HERO_ENTITY | Config.HERO_ENTITY_1;
+        }
+
 
         physicsBody.setLinearDamping(5f);
         physicsBody.setAngularDamping(5f);
@@ -80,10 +87,24 @@ class Hero extends Actor {
         physicsBody = body;
     }
 
+    public Player getPlayer() {
+        return player;
+    }
+
     @Override
     public void draw(Batch batch, float alpha){
         GlyphLayout layout = new GlyphLayout();
-        layout.setText(Overwatch2D.gamePlayerNameFont, name, new Color(0.14f, 0.7098f, 0.74901f, 1), Gdx.graphics.getWidth(), Align.center, false);
+
+        Color c;
+
+        if(getPlayer().getTeam() == GameScreen.getCurrentPlayer().getTeam()) {
+            c = new Color(0.14f, 0.7098f, 0.74901f, 1);
+        }
+        else {
+            c = new Color(0.64f, 0.0f, 0.0f, 1);
+        }
+
+        layout.setText(Overwatch2D.gamePlayerNameFont, getPlayer().getName(), c, Gdx.graphics.getWidth(), Align.center, false);
 
         Overwatch2D.gamePlayerNameFont.draw(batch, layout, getX() - Gdx.graphics.getWidth() / 2, getY() + 50);
 
@@ -93,12 +114,12 @@ class Hero extends Actor {
         Overwatch2D.shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
 
         Overwatch2D.shapeRenderer.begin();
-        Overwatch2D.shapeRenderer.setColor(new Color(0.14f, 0.7098f, 0.74901f, 1));
+        Overwatch2D.shapeRenderer.setColor(c);
         Overwatch2D.shapeRenderer.rect(getX() - 80 / 2, getY() + 60, 80, 10);
         Overwatch2D.shapeRenderer.end();
 
         Overwatch2D.shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        Overwatch2D.shapeRenderer.setColor(new Color(0.14f, 0.7098f, 0.74901f, 1));
+        Overwatch2D.shapeRenderer.setColor(c);
         Overwatch2D.shapeRenderer.rect(getX() - 80 / 2, getY() + 60, Math.max(0, 80f * ((float)this.currentHP/(float)this.MAX_HEALTH)), 10);
         Overwatch2D.shapeRenderer.end();
 
@@ -222,7 +243,7 @@ class Hero extends Actor {
     }
 
     public String getPlayerName() {
-        return name;
+        return player.getName();
     }
 
     public Texture getPortraitTexture() {

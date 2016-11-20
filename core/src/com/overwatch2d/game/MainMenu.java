@@ -172,9 +172,6 @@ class MainMenu implements Screen, InputProcessor {
 
     @Override
     public boolean keyUp(int keycode) {
-        game.setScreen(new GameScreen(game));
-        dispose();
-
         return false;
     }
 

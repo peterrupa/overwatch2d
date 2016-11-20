@@ -21,6 +21,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+
 public class HostJoin implements Screen, InputProcessor {
 
     private final Overwatch2D game;
@@ -62,7 +66,16 @@ public class HostJoin implements Screen, InputProcessor {
         tutorialGradient.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y) {
-                game.setScreen(new GameScreen(game));
+//                // temporary, hardcode players
+//                ArrayList<Player> p = new ArrayList<Player>();
+//
+//                try {
+//                    p.add(new Player("Peter", InetAddress.getByName("127.0.0.1"), 4545));
+//                } catch (UnknownHostException e1) {
+//                    e1.printStackTrace();
+//                }
+//
+//                game.setScreen(new GameScreen(game, p));
                 dispose();
             }
 

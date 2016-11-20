@@ -26,15 +26,15 @@ import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 class GameScreen implements Screen, InputProcessor {
     private final Overwatch2D game;
 
-    private final float HERO_SELECTION_DURATION = 21f;
+    private final float HERO_SELECTION_DURATION = 3f;
     private final float GAME_PREPARATION_DURATION = 60f;
-
-    private final String PLAYER_NAME = "xxHARAMBE619xx";
 
     private final int HERO_SELECTION = 0;
     private final int IN_BATTLE = 1;
@@ -88,9 +88,28 @@ class GameScreen implements Screen, InputProcessor {
 
     private float countdown;
 
-    GameScreen(final Overwatch2D gam) {
+    private static ArrayList<Player> players = new ArrayList<Player>();
+    private static Player currentPlayer;
+
+    GameScreen(final Overwatch2D gam, ArrayList<Player> players) {
         game = gam;
         this.countdown = HERO_SELECTION_DURATION;
+        this.players = players;
+
+        try {
+            for(Player p: players) {
+                if(p.getAddress().equals(InetAddress.getByName("192.168.0.1"))) {
+                    currentPlayer = p;
+
+                    break;
+                }
+            }
+        }
+        catch(Exception e) {
+
+        }
+
+        System.out.println(currentPlayer);
 
         float w = Gdx.graphics.getWidth(),
               h = Gdx.graphics.getHeight();
@@ -109,9 +128,8 @@ class GameScreen implements Screen, InputProcessor {
         // create physics world
         world = new World(new Vector2(0, 0), true);
 
-        heroes.add(new Hero(1100, 1100));
-        heroes.add(new Hero(1200, 1200));
-        heroes.add(new Hero(1300, 1200));
+        heroes.add(new Hero(200, 200, players.get(1)));
+        heroes.add(new Hero(1100, 1100, players.get(2)));
 
         debugRenderer = new Box2DDebugRenderer();
 
@@ -182,6 +200,8 @@ class GameScreen implements Screen, InputProcessor {
         this.setState(HERO_SELECTION);
 
         initSound.play();
+
+        createObjective(200, 200, 400, 300);
     }
 
     public static void addParticle(FileHandle file, float x, float y) {
@@ -340,7 +360,7 @@ class GameScreen implements Screen, InputProcessor {
 
         particlesDestroyed.clear();
 
-//        debugRenderer.render(world, debugMatrix);
+        debugRenderer.render(world, debugMatrix);
 
         mouseMoved(Gdx.input.getX(), Gdx.input.getY());
     }
@@ -539,7 +559,12 @@ class GameScreen implements Screen, InputProcessor {
             public void clicked(InputEvent e, float x, float y) {
                 if(state == HERO_SELECTION) {
                     setState(IN_BATTLE);
-                    spawnHero(new Hero(100, 100));
+                    Hero h = new Hero(100, 100, currentPlayer);
+
+                    spawnHero(h);
+
+                    currentPlayer.setHero(h);
+
                     playerHero.playSelectedSound();
                 }
             }
@@ -567,7 +592,7 @@ class GameScreen implements Screen, InputProcessor {
     }
 
     private void spawnHero(Hero e) {
-        if(e.getPlayerName() == PLAYER_NAME) {
+        if(e.getPlayerName() == currentPlayer.getName()) {
             playerHero = e;
 
             initPortrait();
@@ -608,5 +633,34 @@ class GameScreen implements Screen, InputProcessor {
         heroPortraitSprite = new Sprite(heroPortraitTexture);
         heroPortraitSprite.setPosition(100 - heroPortraitSprite.getWidth()/2, 90 - heroPortraitSprite.getHeight()/2);
         heroPortraitSprite.setScale(0.5f);
+    }
+
+    private void createObjective(float x1, float y1, float x2, float y2) {
+        BodyDef bodyDef = new BodyDef();
+        bodyDef.type = BodyDef.BodyType.DynamicBody;
+        bodyDef.position.set((x1 + x2) / 2 / Config.PIXELS_TO_METERS, (y1 + y2) / 2 / Config.PIXELS_TO_METERS);
+
+        Body physicsBody = GameScreen.world.createBody(bodyDef);
+
+        PolygonShape shape = new PolygonShape();
+        shape.setAsBox((x2 - x1) / 2 / Config.PIXELS_TO_METERS, (y2 - y1) / 2 / Config.PIXELS_TO_METERS);
+
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape = shape;
+        fixtureDef.density = 1f;
+//        fixtureDef.filter.categoryBits = Config.HERO_ENTITY;
+//        fixtureDef.filter.maskBits = Config.HERO_ENTITY | Config.PROJECTILE_ENTITY;
+        fixtureDef.isSensor = true;
+
+        physicsBody.createFixture(fixtureDef);
+
+        shape.dispose();
+
+        stage.addActor(new Cursor(x1, y1));
+        stage.addActor(new Cursor(x2, y2));
+    }
+
+    public static Player getCurrentPlayer() {
+        return currentPlayer;
     }
 }

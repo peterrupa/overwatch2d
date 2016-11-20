@@ -41,8 +41,15 @@ class Projectile extends Actor {
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.density = density;
-        fixtureDef.filter.categoryBits = Config.PROJECTILE_ENTITY;
-        fixtureDef.filter.maskBits = Config.HERO_ENTITY;
+
+        if(owner.getPlayer().getTeam() == 0) {
+            fixtureDef.filter.categoryBits = Config.PROJECTILE_ENTITY_0;
+            fixtureDef.filter.maskBits = Config.HERO_ENTITY_1;
+        }
+        else {
+            fixtureDef.filter.categoryBits = Config.PROJECTILE_ENTITY_1;
+            fixtureDef.filter.maskBits = Config.HERO_ENTITY_0;
+        }
 
         physicsBody.createFixture(fixtureDef);
         physicsBody.setBullet(true);
