@@ -65,10 +65,10 @@ class Hero extends Actor {
         fixtureDef.density = 1f;
 
         if(getPlayer().getTeam() == 0) {
-            fixtureDef.filter.categoryBits = Config.HERO_ENTITY | Config.HERO_ENTITY_0;
+            fixtureDef.filter.categoryBits = Config.HERO_ENTITY_0;
         }
         else {
-            fixtureDef.filter.categoryBits = Config.HERO_ENTITY | Config.HERO_ENTITY_1;
+            fixtureDef.filter.categoryBits = Config.HERO_ENTITY_1;
         }
 
 

@@ -3,12 +3,15 @@ package com.overwatch2d.game;
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.ParticleEmitter;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -19,6 +22,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -38,6 +42,7 @@ class GameScreen implements Screen, InputProcessor {
 
     private final int HERO_SELECTION = 0;
     private final int IN_BATTLE = 1;
+    private final int POST_GAME = 2;
 
     private int state;
 
@@ -46,6 +51,7 @@ class GameScreen implements Screen, InputProcessor {
 
     static Stage stage;
     static Stage UIStage;
+    static Stage PostStage;
     static Stage selectionStage;
     static OrthographicCamera camera;
     private TiledMapRenderer tiledMapRenderer;
@@ -78,6 +84,11 @@ class GameScreen implements Screen, InputProcessor {
     private Label ammoCountLabel;
     private Label gunNameLabel;
     private Label countdownLabel;
+    private Label objectiveLabel;
+    private Label victoryLabel;
+    private Label defeatLabel;
+
+    private float objectiveFlashTTL;
 
     private Texture heroPortraitTexture;
     private Sprite heroPortraitSprite;
@@ -90,6 +101,35 @@ class GameScreen implements Screen, InputProcessor {
 
     private static ArrayList<Player> players = new ArrayList<Player>();
     private static Player currentPlayer;
+
+    private int currentObjective;
+    private float objective1Capture = 0f;
+    private ArrayList<Hero> objective1Heroes = new ArrayList<Hero>();
+    private final float objective1x1 = 600;
+    private final float objective1y1 = 1200;
+    private final float objective1x2 = 1000;
+    private final float objective1y2 = 1400;
+
+    private float objective2Capture = 0f;
+    private ArrayList<Hero> objective2Heroes = new ArrayList<Hero>();
+    private final float objective2x1 = 1200;
+    private final float objective2y1 = 600;
+    private final float objective2x2 = 1400;
+    private final float objective2y2 = 800;
+
+    private final float OBJECTIVE_FLASH_TIME = 7f;
+
+    private boolean slowmo = false;
+
+    private final Sound victoryAnnouncerSFX = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/victory.mp3"));
+    private final Sound defeatAnnouncerSFX = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/defeat.mp3"));
+    private final Sound victoryMusicSFX = Gdx.audio.newSound(Gdx.files.internal("sfx/music/victory.mp3"));
+    private final Sound defeatMusicSFX = Gdx.audio.newSound(Gdx.files.internal("sfx/music/defeat.mp3"));
+
+    private final Sound captureTheObjectiveSFX = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/capture_the_objective.mp3"));
+    private final Sound defendTheObjectiveSFX = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/defend_the_objective.mp3"));
+    private final Sound objectiveCapturedSFX = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/objective_captured.mp3"));
+    private final Sound objectiveLostSFX = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/objective_lost.mp3"));
 
     GameScreen(final Overwatch2D gam, ArrayList<Player> players) {
         game = gam;
@@ -109,8 +149,6 @@ class GameScreen implements Screen, InputProcessor {
 
         }
 
-        System.out.println(currentPlayer);
-
         float w = Gdx.graphics.getWidth(),
               h = Gdx.graphics.getHeight();
 
@@ -120,6 +158,7 @@ class GameScreen implements Screen, InputProcessor {
 
         stage = new Stage(new ExtendViewport(w, h, camera));
         UIStage = new Stage();
+        PostStage = new Stage();
         selectionStage = new Stage();
 
         TiledMap tiledMap = new TmxMapLoader().load("sampleMap.tmx");
@@ -128,7 +167,7 @@ class GameScreen implements Screen, InputProcessor {
         // create physics world
         world = new World(new Vector2(0, 0), true);
 
-        heroes.add(new Hero(200, 200, players.get(1)));
+        heroes.add(new Hero(200, 500, players.get(1)));
         heroes.add(new Hero(1100, 1100, players.get(2)));
 
         debugRenderer = new Box2DDebugRenderer();
@@ -143,6 +182,42 @@ class GameScreen implements Screen, InputProcessor {
         world.setContactListener(new ContactListener() {
             @Override
             public void beginContact(Contact contact) {
+                if((contact.getFixtureA().getBody().getUserData() == 1 &&
+                    contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
+                   (contact.getFixtureA().getBody().getUserData() instanceof Hero &&
+                    contact.getFixtureB().getBody().getUserData() == 1) &&
+                    currentObjective == 1) {
+
+                    Hero h;
+
+                    if(contact.getFixtureA().getBody().getUserData() instanceof Hero) {
+                        h = (Hero) contact.getFixtureA().getBody().getUserData();
+                    }
+                    else {
+                        h = (Hero) contact.getFixtureB().getBody().getUserData();
+                    }
+
+                    objective1Heroes.add(h);
+                }
+
+                if((contact.getFixtureA().getBody().getUserData() == 2 &&
+                    contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
+                   (contact.getFixtureA().getBody().getUserData() instanceof Hero &&
+                    contact.getFixtureB().getBody().getUserData() == 2) &&
+                    currentObjective == 2) {
+
+                    Hero h;
+
+                    if(contact.getFixtureA().getBody().getUserData() instanceof Hero) {
+                        h = (Hero) contact.getFixtureA().getBody().getUserData();
+                    }
+                    else {
+                        h = (Hero) contact.getFixtureB().getBody().getUserData();
+                    }
+
+                    objective2Heroes.add(h);
+                }
+
                 if((contact.getFixtureA().getBody().getUserData() instanceof Projectile &&
                     contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
                    (contact.getFixtureA().getBody().getUserData() instanceof Hero &&
@@ -177,7 +252,41 @@ class GameScreen implements Screen, InputProcessor {
 
             @Override
             public void endContact(Contact contact) {
+                if((contact.getFixtureA().getBody().getUserData() == 1 &&
+                    contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
+                   (contact.getFixtureA().getBody().getUserData() instanceof Hero &&
+                    contact.getFixtureB().getBody().getUserData() == 1) &&
+                    currentObjective == 1) {
 
+                    Hero h;
+
+                    if(contact.getFixtureA().getBody().getUserData() instanceof Hero) {
+                        h = (Hero) contact.getFixtureA().getBody().getUserData();
+                    }
+                    else {
+                        h = (Hero) contact.getFixtureB().getBody().getUserData();
+                    }
+
+                    objective1Heroes.remove(h);
+                }
+
+                if((contact.getFixtureA().getBody().getUserData() == 2 &&
+                    contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
+                   (contact.getFixtureA().getBody().getUserData() instanceof Hero &&
+                    contact.getFixtureB().getBody().getUserData() == 2) &&
+                    currentObjective == 2) {
+
+                    Hero h;
+
+                    if(contact.getFixtureA().getBody().getUserData() instanceof Hero) {
+                        h = (Hero) contact.getFixtureA().getBody().getUserData();
+                    }
+                    else {
+                        h = (Hero) contact.getFixtureB().getBody().getUserData();
+                    }
+
+                    objective2Heroes.remove(h);
+                }
             }
 
             @Override
@@ -201,7 +310,17 @@ class GameScreen implements Screen, InputProcessor {
 
         initSound.play();
 
-        createObjective(200, 200, 400, 300);
+        createObjective(objective1x1, objective1y1, objective1x2, objective1y2, 1);
+        createObjective(objective2x1, objective2y1, objective2x2, objective2y2, 2);
+
+        setObjective(1);
+
+        if(currentPlayer.getTeam() == 0) {
+            captureTheObjectiveSFX.play();
+        }
+        else {
+            defendTheObjectiveSFX.play();
+        }
     }
 
     public static void addParticle(FileHandle file, float x, float y) {
@@ -232,11 +351,120 @@ class GameScreen implements Screen, InputProcessor {
         stage.dispose();
         world.dispose();
         UIStage.dispose();
+        PostStage.dispose();
         selectionStage.dispose();
     }
 
     @Override
     public void render(float delta) {
+        if(state == IN_BATTLE) {
+            if(currentObjective == 1) {
+                if(getNumberOfHeroesTeam(objective1Heroes, 0) > 0 && getNumberOfHeroesTeam(objective1Heroes, 1) == 0) {
+                    objective1Capture += Gdx.graphics.getDeltaTime() * objective1Heroes.size() * Config.CAPPING_MODIFIER;
+
+                    if(objective1Capture > 100) {
+                        setObjective(2);
+
+                        if(currentPlayer.getTeam() == 0) {
+                            // captured
+                            objectiveCapturedSFX.play();
+
+                            Timer.schedule(new Timer.Task() {
+                                @Override
+                                public void run() {
+                                    captureTheObjectiveSFX.play();
+                                }
+                            }, 1.8f);
+                        }
+                        else {
+                            // lost
+                            objectiveLostSFX.play();
+
+                            Timer.schedule(new Timer.Task() {
+                                @Override
+                                public void run() {
+                                    defendTheObjectiveSFX.play();
+                                }
+                            }, 1.8f);
+                        }
+                    }
+                }
+
+                else if(getNumberOfHeroesTeam(objective1Heroes, 0) > 0 && getNumberOfHeroesTeam(objective1Heroes, 1) > 0) {
+                    // contested
+                }
+
+                else {
+                    objective1Capture -= Gdx.graphics.getDeltaTime() / 2 * Config.CAPPING_MODIFIER;
+
+                    if(objective1Capture < 0) objective1Capture = 0;
+                }
+            }
+            else if(currentObjective == 2) {
+                if(getNumberOfHeroesTeam(objective2Heroes, 0) > 0 && getNumberOfHeroesTeam(objective2Heroes, 1) == 0) {
+                    objective2Capture += Gdx.graphics.getDeltaTime() * objective2Heroes.size() * Config.CAPPING_MODIFIER;
+
+                    if(objective2Capture > 100) {
+                        setState(POST_GAME);
+
+                        if(currentPlayer.getTeam() == 0) {
+                            Label.LabelStyle victoryStyle = new Label.LabelStyle();
+                            victoryStyle.font = Overwatch2D.gamePostgamefont;
+                            victoryStyle.fontColor = Color.YELLOW;
+
+                            victoryLabel = new Label("VICTORY", victoryStyle);
+                            victoryLabel.setPosition(500, Gdx.graphics.getHeight()/2 - 75);
+
+                            victoryMusicSFX.play();
+
+                            Timer.schedule(new Timer.Task() {
+                                @Override
+                                public void run() {
+                                    PostStage.addActor(victoryLabel);
+                                    victoryAnnouncerSFX.play(3f);
+                                }
+                            }, 2f);
+                        }
+                        else {
+                            final Label.LabelStyle defeatStyle = new Label.LabelStyle();
+                            defeatStyle.font = Overwatch2D.gamePostgamefont;
+                            defeatStyle.fontColor = Color.RED;
+
+                            defeatLabel = new Label("DEFEAT", defeatStyle);
+                            defeatLabel.setPosition(500, Gdx.graphics.getHeight()/2 - 75);
+
+                            defeatMusicSFX.play();
+
+                            Timer.schedule(new Timer.Task() {
+                                @Override
+                                public void run() {
+                                    PostStage.addActor(defeatLabel);
+
+                                    defeatAnnouncerSFX.play();
+                                }
+                            }, 2f);
+                        }
+                    }
+                }
+
+                else if(getNumberOfHeroesTeam(objective2Heroes, 0) > 0 && getNumberOfHeroesTeam(objective2Heroes, 1) > 0) {
+                    // contested
+                }
+
+                else {
+                    objective2Capture -= Gdx.graphics.getDeltaTime() / 2 * Config.CAPPING_MODIFIER;
+
+                    if(objective2Capture < 0) objective2Capture = 0;
+                }
+            }
+        }
+
+        objectiveFlashTTL -= Gdx.graphics.getDeltaTime();
+
+        if(objectiveFlashTTL < 0) {
+            objectiveLabel.setText("");
+        }
+
         if(!heroSelectionFinished) {
             countdown -= Gdx.graphics.getDeltaTime();
 
@@ -278,7 +506,12 @@ class GameScreen implements Screen, InputProcessor {
             updateSpeed(playerHero);
         }
 
-        world.step(1f/60f, 6, 2);
+        if(slowmo) {
+            world.step(1f/240f, 6, 2);
+        }
+        else {
+            world.step(1f/60f, 6, 2);
+        }
 
         for(ParticleEffect pe: particles) {
             pe.update(Gdx.graphics.getDeltaTime());
@@ -305,7 +538,7 @@ class GameScreen implements Screen, InputProcessor {
             camera.position.x = 1100;
             camera.position.y = 1100;
         }
-        else if(state == IN_BATTLE) {
+        else if(state == IN_BATTLE || state == POST_GAME) {
             Vector3 mouseCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
             mouseCoordinates = camera.unproject(mouseCoordinates);
 
@@ -327,6 +560,9 @@ class GameScreen implements Screen, InputProcessor {
 
         debugMatrix = stage.getBatch().getProjectionMatrix().cpy().scale(Config.PIXELS_TO_METERS,
                 Config.PIXELS_TO_METERS, 0);
+
+        renderObjective(1);
+        renderObjective(2);
 
         stage.draw();
         stage.getBatch().begin();
@@ -354,6 +590,23 @@ class GameScreen implements Screen, InputProcessor {
             UIStage.getBatch().end();
         }
 
+        if(state == POST_GAME) {
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+            Overwatch2D.shapeRenderer.setAutoShapeType(true);
+            Overwatch2D.shapeRenderer.setProjectionMatrix(PostStage.getBatch().getProjectionMatrix());
+
+            Overwatch2D.shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+            Overwatch2D.shapeRenderer.setColor(0f, 0f, 0f, 0.65f);
+            Overwatch2D.shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            Overwatch2D.shapeRenderer.end();
+
+            Gdx.gl.glDisable(GL20.GL_BLEND);
+
+            PostStage.draw();
+        }
+
         for(ParticleEffect pe: particlesDestroyed) {
             particles.remove(pe);
         }
@@ -367,7 +620,7 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean keyUp(int keycode) {
-        if(state == IN_BATTLE) {
+        if(state == IN_BATTLE || state == POST_GAME) {
             if(keycode == Input.Keys.W) {
                 WHold = false;
             }
@@ -399,7 +652,7 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean keyDown(int keycode) {
-        if(state == IN_BATTLE) {
+        if(state == IN_BATTLE || state == POST_GAME) {
             if(keycode == Input.Keys.W) {
                 WHold = true;
             }
@@ -423,6 +676,9 @@ class GameScreen implements Screen, InputProcessor {
         if(state == IN_BATTLE) {
             Gdx.input.setCursorCatched(true);
             selectionStage.clear();
+        }
+        else if(state == POST_GAME) {
+            slowmo = true;
         }
         else if(state == HERO_SELECTION) {
             Gdx.input.setCursorCatched(false);
@@ -462,7 +718,7 @@ class GameScreen implements Screen, InputProcessor {
         if(state == HERO_SELECTION) {
             Gdx.input.setCursorCatched(false);
         }
-        if(state == IN_BATTLE) {
+        if(state == IN_BATTLE || state == POST_GAME) {
             Gdx.input.setCursorCatched(true);
         }
     }
@@ -481,7 +737,7 @@ class GameScreen implements Screen, InputProcessor {
         if(state == HERO_SELECTION) {
             Gdx.input.setCursorCatched(false);
         }
-        if(state == IN_BATTLE) {
+        if(state == IN_BATTLE || state == POST_GAME) {
             Gdx.input.setCursorCatched(true);
         }
     }
@@ -498,7 +754,7 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        if(state == IN_BATTLE) {
+        if(state == IN_BATTLE || state == POST_GAME) {
             LeftMouseHold = true;
         }
 
@@ -507,7 +763,7 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        if(state == IN_BATTLE) {
+        if(state == IN_BATTLE || state == POST_GAME) {
             LeftMouseHold = false;
         }
 
@@ -521,7 +777,7 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
-        if(state == IN_BATTLE) {
+        if(state == IN_BATTLE || state == POST_GAME) {
             Gdx.input.setCursorPosition(Math.max(Math.min(screenX, Gdx.graphics.getWidth()), 0), Math.max(Math.min(screenY, Gdx.graphics.getHeight()), 0));
 
             Vector3 hoverCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
@@ -626,6 +882,14 @@ class GameScreen implements Screen, InputProcessor {
         gunNameLabel.setPosition(1160, 100);
 
         UIStage.addActor(gunNameLabel);
+
+        Label.LabelStyle objectiveStyle = new Label.LabelStyle();
+        objectiveStyle.font = game.gameUIObjectiveFont;
+
+        objectiveLabel = new Label("", objectiveStyle);
+        objectiveLabel.setPosition(Gdx.graphics.getWidth() / 2 - 100, 600);
+
+        UIStage.addActor(objectiveLabel);
     }
 
     private void initPortrait() {
@@ -635,7 +899,7 @@ class GameScreen implements Screen, InputProcessor {
         heroPortraitSprite.setScale(0.5f);
     }
 
-    private void createObjective(float x1, float y1, float x2, float y2) {
+    private void createObjective(float x1, float y1, float x2, float y2, int id) {
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
         bodyDef.position.set((x1 + x2) / 2 / Config.PIXELS_TO_METERS, (y1 + y2) / 2 / Config.PIXELS_TO_METERS);
@@ -648,19 +912,96 @@ class GameScreen implements Screen, InputProcessor {
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.density = 1f;
-//        fixtureDef.filter.categoryBits = Config.HERO_ENTITY;
-//        fixtureDef.filter.maskBits = Config.HERO_ENTITY | Config.PROJECTILE_ENTITY;
+        fixtureDef.filter.categoryBits = Config.OBJECTIVE_ENTITY;
+        fixtureDef.filter.maskBits = Config.HERO_ENTITY_0 | Config.HERO_ENTITY_1;
         fixtureDef.isSensor = true;
 
         physicsBody.createFixture(fixtureDef);
+        physicsBody.setUserData(id);
 
         shape.dispose();
-
-        stage.addActor(new Cursor(x1, y1));
-        stage.addActor(new Cursor(x2, y2));
     }
 
     public static Player getCurrentPlayer() {
         return currentPlayer;
+    }
+
+    private void flashObjective(String msg) {
+        objectiveLabel.setText(msg);
+
+        objectiveFlashTTL = OBJECTIVE_FLASH_TIME;
+    }
+
+    private void setObjective(int obj) {
+        currentObjective = obj;
+
+        if(currentPlayer.getTeam() == 0) {
+            flashObjective("Capture Objective " + Character.toString((char) (64 + currentObjective)));
+        }
+        else {
+            flashObjective("Defend Objective " + Character.toString((char) (64 + currentObjective)));
+        }
+    }
+
+    private int getNumberOfHeroesTeam(ArrayList<Hero> arr, int team) {
+        int count = 0;
+
+        for(Hero h: arr) {
+            if(h.getPlayer().getTeam() == team) count++;
+        }
+
+        return count;
+    }
+
+    private void renderObjective(int obj) {
+        Color c;
+
+        if(obj >= currentObjective) {
+            c = new Color(0.64f, 0.0f, 0.0f, 1);
+        }
+        else {
+            c = new Color(0.14f, 0.7098f, 0.74901f, 1);
+        }
+
+        GlyphLayout layout = new GlyphLayout();
+
+        float objectivex1;
+        float objectivex2;
+        float objectivey2;
+        float objectiveCapture;
+
+        if(obj == 1) {
+            objectivex1 = objective1x1;
+            objectivex2 = objective1x2;
+            objectivey2 = objective1y2;
+            objectiveCapture = objective1Capture;
+        }
+        else {
+            objectivex1 = objective2x1;
+            objectivex2 = objective2x2;
+            objectivey2 = objective2y2;
+            objectiveCapture = objective2Capture;
+        }
+
+        layout.setText(Overwatch2D.gameObjectiveLabelFont, Character.toString((char) (64 + obj)), c, (objectivex2 - objectivex1), Align.center, false);
+
+        stage.getBatch().begin();
+
+        Overwatch2D.gameObjectiveLabelFont.draw(stage.getBatch(), layout, objectivex1, objectivey2 - 60);
+
+        stage.getBatch().end();
+
+        Overwatch2D.shapeRenderer.setAutoShapeType(true);
+        Overwatch2D.shapeRenderer.setProjectionMatrix(stage.getBatch().getProjectionMatrix());
+
+        Overwatch2D.shapeRenderer.begin();
+        Overwatch2D.shapeRenderer.setColor(c);
+        Overwatch2D.shapeRenderer.rect(objectivex1 + (objectivex2 - objectivex1) / 2 - 120/2, objectivey2 - 130, 120, 20);
+        Overwatch2D.shapeRenderer.end();
+
+        Overwatch2D.shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        Overwatch2D.shapeRenderer.setColor(c);
+        Overwatch2D.shapeRenderer.rect(objectivex1 + (objectivex2 - objectivex1) / 2 - 120/2, objectivey2 - 130, 120 * (objectiveCapture / 100), 20);
+        Overwatch2D.shapeRenderer.end();
     }
 }
