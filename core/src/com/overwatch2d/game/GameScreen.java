@@ -37,8 +37,8 @@ import java.util.ArrayList;
 class GameScreen implements Screen, InputProcessor {
     private final Overwatch2D game;
 
-    private final float HERO_SELECTION_DURATION = 3f;
-    private final float GAME_PREPARATION_DURATION = 60f;
+    private final float HERO_SELECTION_DURATION = 20f;
+    private final float GAME_PREPARATION_DURATION = 60f + HERO_SELECTION_DURATION;
 
     private final int HERO_SELECTION = 0;
     private final int IN_BATTLE = 1;
@@ -47,7 +47,6 @@ class GameScreen implements Screen, InputProcessor {
     private int state;
 
     private boolean heroSelectionFinished = false;
-    private boolean preparationFinished = false;
 
     static Stage stage;
     static Stage UIStage;
@@ -87,6 +86,7 @@ class GameScreen implements Screen, InputProcessor {
     private Label objectiveLabel;
     private Label victoryLabel;
     private Label defeatLabel;
+    private Label battleCountdownLabel;
 
     private float objectiveFlashTTL;
 
@@ -130,6 +130,9 @@ class GameScreen implements Screen, InputProcessor {
     private final Sound defendTheObjectiveSFX = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/defend_the_objective.mp3"));
     private final Sound objectiveCapturedSFX = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/objective_captured.mp3"));
     private final Sound objectiveLostSFX = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/objective_lost.mp3"));
+
+    private float preparationDuration = GAME_PREPARATION_DURATION;
+    private boolean battleHasStarted = false;
 
     GameScreen(final Overwatch2D gam, ArrayList<Player> players) {
         game = gam;
@@ -312,15 +315,6 @@ class GameScreen implements Screen, InputProcessor {
 
         createObjective(objective1x1, objective1y1, objective1x2, objective1y2, 1);
         createObjective(objective2x1, objective2y1, objective2x2, objective2y2, 2);
-
-        setObjective(1);
-
-        if(currentPlayer.getTeam() == 0) {
-            captureTheObjectiveSFX.play();
-        }
-        else {
-            defendTheObjectiveSFX.play();
-        }
     }
 
     public static void addParticle(FileHandle file, float x, float y) {
@@ -357,6 +351,33 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public void render(float delta) {
+        if(!battleHasStarted) {
+            preparationDuration -= Gdx.graphics.getDeltaTime();
+
+            int time = (int)Math.ceil(preparationDuration);
+
+            battleCountdownLabel.setText("Battle in " + time + " second" + (time == 1? "": "s"));
+
+            // @TODO: 30 seconds remaining, and countdown
+
+            if(preparationDuration < 0) {
+                battleHasStarted = true;
+
+                battleCountdownLabel.remove();
+
+                setObjective(1);
+
+                if(currentPlayer.getTeam() == 0) {
+                    captureTheObjectiveSFX.play();
+                }
+                else {
+                    defendTheObjectiveSFX.play();
+                }
+
+                // @TODO: remove base limits
+            }
+        }
+
         if(state == IN_BATTLE) {
             if(currentObjective == 1) {
                 if(getNumberOfHeroesTeam(objective1Heroes, 0) > 0 && getNumberOfHeroesTeam(objective1Heroes, 1) == 0) {
@@ -890,6 +911,14 @@ class GameScreen implements Screen, InputProcessor {
         objectiveLabel.setPosition(Gdx.graphics.getWidth() / 2 - 100, 600);
 
         UIStage.addActor(objectiveLabel);
+
+        Label.LabelStyle battleCountdownStyle = new Label.LabelStyle();
+        battleCountdownStyle.font = game.gameUIObjectiveFont;
+
+        battleCountdownLabel = new Label("", battleCountdownStyle);
+        battleCountdownLabel.setPosition(Gdx.graphics.getWidth() / 2 - 100, 600);
+
+        UIStage.addActor(battleCountdownLabel);
     }
 
     private void initPortrait() {
