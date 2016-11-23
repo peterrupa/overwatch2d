@@ -87,6 +87,10 @@ public class HostScreen implements Screen{
                     Player geeca = new Player("Geeca", InetAddress.getByName("192.168.0.41"), 4545);
                     geeca.setTeam(1);
                     p.add(geeca);
+
+                    Player monkey = new Player("xxxHarambexxx", InetAddress.getByName("192.168.0.46"), 4545);
+                    monkey.setTeam(1);
+                    p.add(monkey);
                 } catch (UnknownHostException e1) {
                     e1.printStackTrace();
                 }

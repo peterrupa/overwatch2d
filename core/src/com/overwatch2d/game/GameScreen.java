@@ -11,34 +11,40 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.ParticleEmitter;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
+
+import static com.overwatch2d.game.GameScreen.flashObjective;
 
 class GameScreen implements Screen, InputProcessor {
     private final Overwatch2D game;
 
+    public static final float ATTACKERS_SPAWN_X = 100;
+    public static final float ATTACKERS_SPAWN_Y = 100;
+    public static final float DEFENDERS_SPAWN_X = 1000;
+    public static final float DEFENDERS_SPAWN_Y = 1000;
+
     private final float HERO_SELECTION_DURATION = 20f;
     private final float GAME_PREPARATION_DURATION = 60f + HERO_SELECTION_DURATION;
+    private final float BATTLE_DURATION = 65f;
+    private static final float NOTIFICATION_DURATION = 3f;
 
     private final int HERO_SELECTION = 0;
     private final int IN_BATTLE = 1;
@@ -53,7 +59,7 @@ class GameScreen implements Screen, InputProcessor {
     static Stage PostStage;
     static Stage selectionStage;
     static OrthographicCamera camera;
-    private TiledMapRenderer tiledMapRenderer;
+    static OrthogonalTiledMapRenderer tiledMapRenderer;
 
     static ArrayList<Hero> heroes = new ArrayList<Hero>();
     static ArrayList<Hero> heroesDestroyed = new ArrayList<Hero>();
@@ -64,11 +70,11 @@ class GameScreen implements Screen, InputProcessor {
 
     static World world;
 
-    private boolean WHold = false;
-    private boolean AHold = false;
-    private boolean SHold = false;
-    private boolean DHold = false;
-    private boolean LeftMouseHold = false;
+    private static boolean WHold = false;
+    private static boolean AHold = false;
+    private static boolean SHold = false;
+    private static boolean DHold = false;
+    private static boolean LeftMouseHold = false;
 
     private Box2DDebugRenderer debugRenderer;
     private Matrix4 debugMatrix;
@@ -83,12 +89,13 @@ class GameScreen implements Screen, InputProcessor {
     private Label ammoCountLabel;
     private Label gunNameLabel;
     private Label countdownLabel;
-    private Label objectiveLabel;
+    private static Label flashLabel;
     private Label victoryLabel;
     private Label defeatLabel;
     private Label battleCountdownLabel;
+    private static Label objectiveLabel;
 
-    private float objectiveFlashTTL;
+    private static float objectiveFlashTTL;
 
     private Texture heroPortraitTexture;
     private Sprite heroPortraitSprite;
@@ -117,7 +124,7 @@ class GameScreen implements Screen, InputProcessor {
     private final float objective2x2 = 1400;
     private final float objective2y2 = 800;
 
-    private final float OBJECTIVE_FLASH_TIME = 7f;
+    private static final float OBJECTIVE_FLASH_TIME = 7f;
 
     private boolean slowmo = false;
 
@@ -131,8 +138,42 @@ class GameScreen implements Screen, InputProcessor {
     private final Sound objectiveCapturedSFX = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/objective_captured.mp3"));
     private final Sound objectiveLostSFX = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/objective_lost.mp3"));
 
+    private final Sound announce10 = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/10.mp3"));
+    private boolean announce10Flag = false;
+    private final Sound announce9 = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/9.mp3"));
+    private boolean announce9Flag = false;
+    private final Sound announce8 = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/8.mp3"));
+    private boolean announce8Flag = false;
+    private final Sound announce7 = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/7.mp3"));
+    private boolean announce7Flag = false;
+    private final Sound announce6 = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/6.mp3"));
+    private boolean announce6Flag = false;
+    private final Sound announce5 = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/5.mp3"));
+    private boolean announce5Flag = false;
+    private final Sound announce4 = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/4.mp3"));
+    private boolean announce4Flag = false;
+    private final Sound announce3 = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/3.mp3"));
+    private boolean announce3Flag = false;
+    private final Sound announce2 = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/2.mp3"));
+    private boolean announce2Flag = false;
+    private final Sound announce1 = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/1.mp3"));
+    private boolean announce1Flag = false;
+
+    private final Sound announce60Remaining = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/60_remaining.mp3"));
+    private boolean announce60RemainingFlag = false;
+    private final Sound announce30Remaining = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/30_remaining.mp3"));
+    private boolean announce30RemainingFlag = false;
+    private final Sound announce10Remaining = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/10_remaining.mp3"));
+    private boolean announce10RemainingFlag = false;
+
+
     private float preparationDuration = GAME_PREPARATION_DURATION;
     private boolean battleHasStarted = false;
+
+    private float gameTimer = 1;
+
+    private static float flashNotificationTTL = 0;
+    private static String flashNotificationMessage = "";
 
     GameScreen(final Overwatch2D gam, ArrayList<Player> players) {
         game = gam;
@@ -172,6 +213,7 @@ class GameScreen implements Screen, InputProcessor {
 
         heroes.add(new Hero(200, 500, players.get(1)));
         heroes.add(new Hero(1100, 1100, players.get(2)));
+        heroes.add(new Hero(1200, 1100, players.get(3)));
 
         debugRenderer = new Box2DDebugRenderer();
 
@@ -226,8 +268,6 @@ class GameScreen implements Screen, InputProcessor {
                    (contact.getFixtureA().getBody().getUserData() instanceof Hero &&
                     contact.getFixtureB().getBody().getUserData() instanceof Projectile)
                 ) {
-                    hitSound.play();
-
                     Projectile projectile;
                     Hero hitHero;
 
@@ -240,8 +280,9 @@ class GameScreen implements Screen, InputProcessor {
                         hitHero = (Hero) contact.getFixtureA().getBody().getUserData();
                     }
 
-                    if(projectilesDestroyed.indexOf(projectile) < 0) {
+                    if(projectilesDestroyed.indexOf(projectile) < 0 && !hitHero.isDead()) {
                         projectile.hit(hitHero);
+                        hitSound.play();
 
                         addParticle(
                             Gdx.files.internal("particles/gunshot_allied.party"),
@@ -356,14 +397,61 @@ class GameScreen implements Screen, InputProcessor {
 
             int time = (int)Math.ceil(preparationDuration);
 
-            battleCountdownLabel.setText("Battle in " + time + " second" + (time == 1? "": "s"));
+            battleCountdownLabel.setText(toTime(time));
 
-            // @TODO: 30 seconds remaining, and countdown
+            if(time == 10 && !announce10Flag) {
+                announce10.play();
+
+                announce10Flag = true;
+            }
+            if(time == 9 && !announce9Flag) {
+                announce9.play();
+
+                announce9Flag = true;
+            }
+            if(time == 8 && !announce8Flag) {
+                announce8.play();
+
+                announce8Flag = true;
+            }
+            if(time == 7 && !announce7Flag) {
+                announce7.play();
+
+                announce7Flag = true;
+            }
+            if(time == 6 && !announce6Flag) {
+                announce6.play();
+
+                announce6Flag = true;
+            }
+            if(time == 5 && !announce5Flag) {
+                announce5.play();
+
+                announce5Flag = true;
+            }
+            if(time == 4 && !announce4Flag) {
+                announce4.play();
+
+                announce4Flag = true;
+            }
+            if(time == 3 && !announce3Flag) {
+                announce3.play();
+
+                announce3Flag = true;
+            }
+            if(time == 2 && !announce2Flag) {
+                announce2.play();
+
+                announce2Flag = true;
+            }
+            if(time == 1 && !announce1Flag) {
+                announce1.play();
+
+                announce1Flag = true;
+            }
 
             if(preparationDuration < 0) {
                 battleHasStarted = true;
-
-                battleCountdownLabel.remove();
 
                 setObjective(1);
 
@@ -385,6 +473,10 @@ class GameScreen implements Screen, InputProcessor {
 
                     if(objective1Capture > 100) {
                         setObjective(2);
+
+                        announce60RemainingFlag = false;
+                        announce30RemainingFlag = false;
+                        announce10RemainingFlag = false;
 
                         if(currentPlayer.getTeam() == 0) {
                             // captured
@@ -426,44 +518,11 @@ class GameScreen implements Screen, InputProcessor {
                     objective2Capture += Gdx.graphics.getDeltaTime() * objective2Heroes.size() * Config.CAPPING_MODIFIER;
 
                     if(objective2Capture > 100) {
-                        setState(POST_GAME);
-
                         if(currentPlayer.getTeam() == 0) {
-                            Label.LabelStyle victoryStyle = new Label.LabelStyle();
-                            victoryStyle.font = Overwatch2D.gamePostgamefont;
-                            victoryStyle.fontColor = Color.YELLOW;
-
-                            victoryLabel = new Label("VICTORY", victoryStyle);
-                            victoryLabel.setPosition(500, Gdx.graphics.getHeight()/2 - 75);
-
-                            victoryMusicSFX.play();
-
-                            Timer.schedule(new Timer.Task() {
-                                @Override
-                                public void run() {
-                                    PostStage.addActor(victoryLabel);
-                                    victoryAnnouncerSFX.play(3f);
-                                }
-                            }, 2f);
+                            victory();
                         }
                         else {
-                            final Label.LabelStyle defeatStyle = new Label.LabelStyle();
-                            defeatStyle.font = Overwatch2D.gamePostgamefont;
-                            defeatStyle.fontColor = Color.RED;
-
-                            defeatLabel = new Label("DEFEAT", defeatStyle);
-                            defeatLabel.setPosition(500, Gdx.graphics.getHeight()/2 - 75);
-
-                            defeatMusicSFX.play();
-
-                            Timer.schedule(new Timer.Task() {
-                                @Override
-                                public void run() {
-                                    PostStage.addActor(defeatLabel);
-
-                                    defeatAnnouncerSFX.play();
-                                }
-                            }, 2f);
+                            defeat();
                         }
                     }
                 }
@@ -480,10 +539,41 @@ class GameScreen implements Screen, InputProcessor {
             }
         }
 
+        if(battleHasStarted && state == IN_BATTLE) {
+            gameTimer -= Gdx.graphics.getDeltaTime();
+
+            int time = (int)Math.ceil(gameTimer);
+
+            battleCountdownLabel.setText(toTime(time));
+
+            if(time == 60 && !announce60RemainingFlag) {
+                announce60Remaining.play();
+                announce60RemainingFlag = true;
+            }
+            if(time == 30 && !announce30RemainingFlag) {
+                announce30Remaining.play();
+                announce30RemainingFlag = true;
+            }
+            if(time == 10 && !announce10RemainingFlag) {
+                announce10Remaining.play();
+                announce10RemainingFlag = true;
+            }
+
+            if(gameTimer <= 0) {
+                if(currentPlayer.getTeam() == 0) {
+                    defeat();
+                }
+                else {
+                    victory();
+                }
+            }
+        }
+
         objectiveFlashTTL -= Gdx.graphics.getDeltaTime();
+        flashNotificationTTL -= Gdx.graphics.getDeltaTime();
 
         if(objectiveFlashTTL < 0) {
-            objectiveLabel.setText("");
+            flashLabel.setText("");
         }
 
         if(!heroSelectionFinished) {
@@ -505,8 +595,17 @@ class GameScreen implements Screen, InputProcessor {
             ammoCountLabel.setText(playerHero.getCurrentAmmo() + "/" + playerHero.getMaxAmmo());
         }
 
-        if(LeftMouseHold) {
-            playerHero.firePrimary();
+        if(LeftMouseHold && !playerHero.isDead()) {
+            Vector3 hoverCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+            Vector3 position = GameScreen.camera.unproject(hoverCoordinates);
+            playerHero.firePrimary(position.x, position.y);
+        }
+        else {
+            LeftMouseHold = false;
+        }
+
+        if(!heroes.get(1).isDead()) {
+            heroes.get(1).firePrimary(0, 0);
         }
 
         for(Projectile p: projectilesDestroyed) {
@@ -523,7 +622,7 @@ class GameScreen implements Screen, InputProcessor {
 
         heroesDestroyed.clear();
 
-        if(playerHero != null) {
+        if(playerHero != null && !playerHero.isDead()) {
             updateSpeed(playerHero);
         }
 
@@ -575,6 +674,7 @@ class GameScreen implements Screen, InputProcessor {
         camera.update();
 
         tiledMapRenderer.setView(camera);
+
         tiledMapRenderer.render();
 
         stage.getViewport().setCamera(camera);
@@ -606,8 +706,21 @@ class GameScreen implements Screen, InputProcessor {
         if(state == IN_BATTLE) {
             UIStage.draw();
 
+            if(flashNotificationTTL > 0) {
+                GlyphLayout layout = new GlyphLayout();
+
+                layout.setText(Overwatch2D.gameUIFlashNotificationFont, flashNotificationMessage, Color.WHITE, Gdx.graphics.getWidth(), Align.center, false);
+
+                UIStage.getBatch().begin();
+
+                Overwatch2D.gameUIFlashNotificationFont.draw(UIStage.getBatch(), layout, 0, Gdx.graphics.getHeight()/2 - 150);
+                UIStage.getBatch().end();
+            }
+
             UIStage.getBatch().begin();
+
             heroPortraitSprite.draw(UIStage.getBatch());
+
             UIStage.getBatch().end();
         }
 
@@ -641,7 +754,7 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean keyUp(int keycode) {
-        if(state == IN_BATTLE || state == POST_GAME) {
+        if((state == IN_BATTLE || state == POST_GAME) && !playerHero.isDead()) {
             if(keycode == Input.Keys.W) {
                 WHold = false;
             }
@@ -673,7 +786,7 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean keyDown(int keycode) {
-        if(state == IN_BATTLE || state == POST_GAME) {
+        if((state == IN_BATTLE || state == POST_GAME) && !playerHero.isDead()) {
             if(keycode == Input.Keys.W) {
                 WHold = true;
             }
@@ -776,8 +889,11 @@ class GameScreen implements Screen, InputProcessor {
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         if(state == IN_BATTLE || state == POST_GAME) {
-            LeftMouseHold = true;
+            if(!playerHero.isDead()) {
+                LeftMouseHold = true;
+            }
         }
+
 
         return false;
     }
@@ -811,7 +927,9 @@ class GameScreen implements Screen, InputProcessor {
                 position.x / Config.PIXELS_TO_METERS - playerHero.getBody().getWorldCenter().x
             ) * 180.0d / Math.PI;
 
-            playerHero.getBody().setTransform(playerHero.getBody().getWorldCenter(), (float)Math.toRadians(degrees));
+            if(!playerHero.isDead()) {
+                playerHero.getBody().setTransform(playerHero.getBody().getWorldCenter(), (float)Math.toRadians(degrees));
+            }
         }
 
         return false;
@@ -836,7 +954,19 @@ class GameScreen implements Screen, InputProcessor {
             public void clicked(InputEvent e, float x, float y) {
                 if(state == HERO_SELECTION) {
                     setState(IN_BATTLE);
-                    Hero h = new Hero(100, 100, currentPlayer);
+
+                    float spawnX, spawnY;
+
+                    if(currentPlayer.getTeam() == 0) {
+                        spawnX = ATTACKERS_SPAWN_X;
+                        spawnY = ATTACKERS_SPAWN_Y;
+                    }
+                    else {
+                        spawnX = DEFENDERS_SPAWN_X;
+                        spawnY = DEFENDERS_SPAWN_Y;
+                    }
+
+                    Hero h = new Hero(spawnX, spawnY, currentPlayer);
 
                     spawnHero(h);
 
@@ -904,21 +1034,39 @@ class GameScreen implements Screen, InputProcessor {
 
         UIStage.addActor(gunNameLabel);
 
-        Label.LabelStyle objectiveStyle = new Label.LabelStyle();
-        objectiveStyle.font = game.gameUIObjectiveFont;
+        Label.LabelStyle flashStyle = new Label.LabelStyle();
+        flashStyle.font = game.gameUIFlashFont;
 
-        objectiveLabel = new Label("", objectiveStyle);
-        objectiveLabel.setPosition(Gdx.graphics.getWidth() / 2 - 100, 600);
+        flashLabel = new Label("", flashStyle);
+        flashLabel.setPosition(Gdx.graphics.getWidth() / 2 - 100, 600);
 
-        UIStage.addActor(objectiveLabel);
+        UIStage.addActor(flashLabel);
+
+        Label.LabelStyle flashNotificationStyle = new Label.LabelStyle();
+        flashNotificationStyle.font = game.gameUIFlashFont;
 
         Label.LabelStyle battleCountdownStyle = new Label.LabelStyle();
-        battleCountdownStyle.font = game.gameUIObjectiveFont;
+        battleCountdownStyle.font = game.gameUITimerFont;
 
         battleCountdownLabel = new Label("", battleCountdownStyle);
-        battleCountdownLabel.setPosition(Gdx.graphics.getWidth() / 2 - 100, 600);
+        battleCountdownLabel.setPosition(Gdx.graphics.getWidth() / 2 - 20, 700);
 
         UIStage.addActor(battleCountdownLabel);
+
+        Label.LabelStyle objectiveStyle = new Label.LabelStyle();
+        objectiveStyle.font = game.gameUITimerFont;
+
+        objectiveLabel = new Label("", objectiveStyle);
+        objectiveLabel.setPosition(Gdx.graphics.getWidth() / 2 + 30, 700);
+
+        if(currentPlayer.getTeam() == 0) {
+            objectiveLabel.setText("Prepare to attack");
+        }
+        else {
+            objectiveLabel.setText("Prepare your defenses");
+        }
+
+        UIStage.addActor(objectiveLabel);
     }
 
     private void initPortrait() {
@@ -955,7 +1103,8 @@ class GameScreen implements Screen, InputProcessor {
         return currentPlayer;
     }
 
-    private void flashObjective(String msg) {
+    public static void flashObjective(String msg) {
+        flashLabel.setText(msg);
         objectiveLabel.setText(msg);
 
         objectiveFlashTTL = OBJECTIVE_FLASH_TIME;
@@ -963,6 +1112,8 @@ class GameScreen implements Screen, InputProcessor {
 
     private void setObjective(int obj) {
         currentObjective = obj;
+
+        gameTimer += BATTLE_DURATION;
 
         if(currentPlayer.getTeam() == 0) {
             flashObjective("Capture Objective " + Character.toString((char) (64 + currentObjective)));
@@ -976,7 +1127,7 @@ class GameScreen implements Screen, InputProcessor {
         int count = 0;
 
         for(Hero h: arr) {
-            if(h.getPlayer().getTeam() == team) count++;
+            if(h.getPlayer().getTeam() == team && !h.isDead()) count++;
         }
 
         return count;
@@ -991,8 +1142,6 @@ class GameScreen implements Screen, InputProcessor {
         else {
             c = new Color(0.14f, 0.7098f, 0.74901f, 1);
         }
-
-        GlyphLayout layout = new GlyphLayout();
 
         float objectivex1;
         float objectivex2;
@@ -1011,6 +1160,8 @@ class GameScreen implements Screen, InputProcessor {
             objectivey2 = objective2y2;
             objectiveCapture = objective2Capture;
         }
+
+        GlyphLayout layout = new GlyphLayout();
 
         layout.setText(Overwatch2D.gameObjectiveLabelFont, Character.toString((char) (64 + obj)), c, (objectivex2 - objectivex1), Align.center, false);
 
@@ -1032,5 +1183,160 @@ class GameScreen implements Screen, InputProcessor {
         Overwatch2D.shapeRenderer.setColor(c);
         Overwatch2D.shapeRenderer.rect(objectivex1 + (objectivex2 - objectivex1) / 2 - 120/2, objectivey2 - 130, 120 * (objectiveCapture / 100), 20);
         Overwatch2D.shapeRenderer.end();
+    }
+
+    public static void setSepia() {
+        ShaderProgram.pedantic = false;
+        ShaderProgram shader = new ShaderProgram(
+            "attribute vec4 "+ShaderProgram.POSITION_ATTRIBUTE+";\n" +
+            "attribute vec4 "+ShaderProgram.COLOR_ATTRIBUTE+";\n" +
+            "attribute vec2 "+ShaderProgram.TEXCOORD_ATTRIBUTE+"0;\n" +
+
+            "uniform mat4 u_projTrans;\n" +
+            " \n" +
+            "varying vec4 vColor;\n" +
+            "varying vec2 vTexCoord;\n" +
+
+            "void main() {\n" +
+            "	vColor = "+ShaderProgram.COLOR_ATTRIBUTE+";\n" +
+            "	vTexCoord = "+ShaderProgram.TEXCOORD_ATTRIBUTE+"0;\n" +
+            "	gl_Position =  u_projTrans * " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" +
+            "}",
+
+            "#ifdef GL_ES\n" //
+            + "#define LOWP lowp\n" //
+            + "precision mediump float;\n" //
+            + "#else\n" //
+            + "#define LOWP \n" //
+            + "#endif\n" + //
+            "//texture 0\n" +
+            "uniform sampler2D u_texture;\n" +
+            "\n" +
+            "//our screen resolution, set from Java whenever the display is resized\n" +
+            "uniform vec2 resolution;\n" +
+            "\n" +
+            "//\"in\" attributes from our vertex shader\n" +
+            "varying LOWP vec4 vColor;\n" +
+            "varying vec2 vTexCoord;\n" +
+            "\n" +
+            "//RADIUS of our vignette, where 0.5 results in a circle fitting the screen\n" +
+            "const float RADIUS = 0.75;\n" +
+            "\n" +
+            "//softness of our vignette, between 0.0 and 1.0\n" +
+            "const float SOFTNESS = 0.45;\n" +
+            "\n" +
+            "//sepia colour, adjust to taste\n" +
+            "const vec3 SEPIA = vec3(1.2, 1.0, 0.8); \n" +
+            "\n" +
+            "void main() {\n" +
+            "	//sample our texture\n" +
+            "	vec4 texColor = texture2D(u_texture, vTexCoord);\n" +
+            "		\n" +
+            "	//1. VIGNETTE\n" +
+            "	\n" +
+            "	//determine center position\n" +
+            "	vec2 position = (gl_FragCoord.xy / resolution.xy) - vec2(0.5);\n" +
+            "	\n" +
+            "	//determine the vector length of the center position\n" +
+            "	float len = length(position);\n" +
+            "	\n" +
+            "	//use smoothstep to create a smooth vignette\n" +
+            "	float vignette = smoothstep(RADIUS, RADIUS-SOFTNESS, len);\n" +
+            "	\n" +
+            "	//apply the vignette with 50% opacity\n" +
+            "	texColor.rgb = mix(texColor.rgb, texColor.rgb * vignette, 0.5);\n" +
+            "		\n" +
+            "	//2. GRAYSCALE\n" +
+            "	\n" +
+            "	//convert to grayscale using NTSC conversion weights\n" +
+            "	float gray = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));\n" +
+            "	\n" +
+            "	//3. SEPIA\n" +
+            "	\n" +
+            "	//create our sepia tone from some constant value\n" +
+            "	vec3 sepiaColor = vec3(gray) * SEPIA;\n" +
+            "		\n" +
+            "	//again we'll use mix so that the sepia effect is at 75%\n" +
+            "	texColor.rgb = mix(texColor.rgb, sepiaColor, 0.75);\n" +
+            "		\n" +
+            "	//final colour, multiplied by vertex colour\n" +
+            "	gl_FragColor = texColor * vColor;\n" +
+            "}"
+        );
+
+        stage.getBatch().setShader(shader);
+        tiledMapRenderer.getBatch().setShader(shader);
+    }
+
+    private String toTime(int n) {
+        int minutes = n / 60;
+        int seconds = n % 60;
+
+        return trailZero(minutes) + ":" +trailZero(seconds);
+    }
+
+    private String trailZero(int n) {
+        if(n < 10) return "0" + n;
+
+        return Integer.toString(n);
+    }
+
+    private void victory() {
+        setState(POST_GAME);
+
+        Label.LabelStyle victoryStyle = new Label.LabelStyle();
+        victoryStyle.font = Overwatch2D.gamePostgamefont;
+        victoryStyle.fontColor = Color.YELLOW;
+
+        victoryLabel = new Label("VICTORY", victoryStyle);
+        victoryLabel.setPosition(500, Gdx.graphics.getHeight()/2 - 75);
+
+        victoryMusicSFX.play();
+
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                PostStage.addActor(victoryLabel);
+                victoryAnnouncerSFX.play(3f);
+            }
+        }, 2f);
+    }
+
+    private void defeat() {
+        setState(POST_GAME);
+
+        final Label.LabelStyle defeatStyle = new Label.LabelStyle();
+        defeatStyle.font = Overwatch2D.gamePostgamefont;
+        defeatStyle.fontColor = Color.RED;
+
+        defeatLabel = new Label("DEFEAT", defeatStyle);
+        defeatLabel.setPosition(500, Gdx.graphics.getHeight()/2 - 75);
+
+        defeatMusicSFX.play();
+
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                PostStage.addActor(defeatLabel);
+
+                defeatAnnouncerSFX.play();
+            }
+        }, 2f);
+    }
+
+    public static void flashNotification(String message) {
+        flashNotificationTTL = NOTIFICATION_DURATION;
+        flashNotificationMessage = message;
+    }
+
+    public static void resetMovement() {
+        WHold = false;
+        AHold = false;
+        SHold = false;
+        DHold = false;
+        LeftMouseHold = false;
+
+        stage.getBatch().setShader(null);
+        tiledMapRenderer.getBatch().setShader(null);
     }
 }

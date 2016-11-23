@@ -8,5 +8,6 @@ class Config {
     static final short PROJECTILE_ENTITY_0 = 0x2 << 3;
     static final short PROJECTILE_ENTITY_1 = 0x2 << 4;
     static final short OBJECTIVE_ENTITY = 0x2 << 5;
+    static final short DEAD_HERO = 0x2 << 6;
     static final float CAPPING_MODIFIER = 5f;
 }

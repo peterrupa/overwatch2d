@@ -12,10 +12,12 @@ public class Overwatch2D extends Game {
     static BitmapFont font;
     static BitmapFont gamePlayerNameFont;
     static BitmapFont gameObjectiveLabelFont;
+    static BitmapFont gameUIFlashNotificationFont;
     static BitmapFont gameUIHealthFont;
     static BitmapFont gameUIAmmoCountFont;
     static BitmapFont gameUIGunNameFont;
-    static BitmapFont gameUIObjectiveFont;
+    static BitmapFont gameUIFlashFont;
+    static BitmapFont gameUITimerFont;
     static BitmapFont gameSelectionOKFont;
     static BitmapFont gameSelectionCountdownFont;
     static BitmapFont gamePostgamefont;
@@ -26,14 +28,16 @@ public class Overwatch2D extends Game {
         font = createFont("fonts/bignoodletoo.ttf", 54);
         gamePlayerNameFont = createFont("fonts/koverwatch.ttf", 18);
         gameObjectiveLabelFont = createFont("fonts/koverwatch.ttf", 50);
-        shapeRenderer = new ShapeRenderer();
+        gameUIFlashNotificationFont = createFont("fonts/bignoodletoo.ttf", 30);
         gameUIHealthFont = createFont("fonts/bignoodletoo.ttf", 50);
         gameUIAmmoCountFont = createFont("fonts/bignoodletoo.ttf", 70);
         gameUIGunNameFont = createFont("fonts/bignoodletoo.ttf", 14);
-        gameUIObjectiveFont = createFont("fonts/bignoodletoo.ttf", 40);
+        gameUIFlashFont = createFont("fonts/bignoodletoo.ttf", 40);
+        gameUITimerFont = createFont("fonts/koverwatch.ttf", 24);
         gameSelectionOKFont = createFont("fonts/koverwatch.ttf", 30);
         gameSelectionCountdownFont = createFont("fonts/bignoodletoo.ttf", 24);
         gamePostgamefont = createFont("fonts/bignoodletoo.ttf", 150);
+        shapeRenderer = new ShapeRenderer();
 
         this.setScreen(new MainMenu(this));
     }
