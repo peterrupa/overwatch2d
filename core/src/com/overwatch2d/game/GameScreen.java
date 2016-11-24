@@ -230,11 +230,11 @@ class GameScreen implements Screen, InputProcessor {
             @Override
             public void beginContact(Contact contact) {
                 if((contact.getFixtureA().getBody().getUserData() instanceof Integer &&
-                   (int)contact.getFixtureA().getBody().getUserData() == 1 &&
+                   (Integer)contact.getFixtureA().getBody().getUserData() == 1 &&
                    contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
                    (contact.getFixtureB().getBody().getUserData() instanceof Integer &&
                    contact.getFixtureA().getBody().getUserData() instanceof Hero &&
-                   (int)contact.getFixtureB().getBody().getUserData() == 1) &&
+                   (Integer)contact.getFixtureB().getBody().getUserData() == 1) &&
                     currentObjective == 1) {
 
                     Hero h;
@@ -250,11 +250,11 @@ class GameScreen implements Screen, InputProcessor {
                 }
 
                 if((contact.getFixtureA().getBody().getUserData() instanceof Integer &&
-                  (int)contact.getFixtureA().getBody().getUserData() == 2 &&
+                  (Integer)contact.getFixtureA().getBody().getUserData() == 2 &&
                    contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
                   (contact.getFixtureB().getBody().getUserData() instanceof Integer &&
                    contact.getFixtureA().getBody().getUserData() instanceof Hero &&
-                  (int)contact.getFixtureB().getBody().getUserData() == 2) &&
+                  (Integer)contact.getFixtureB().getBody().getUserData() == 2) &&
                     currentObjective == 2) {
 
                     Hero h;
@@ -303,11 +303,11 @@ class GameScreen implements Screen, InputProcessor {
             @Override
             public void endContact(Contact contact) {
                 if((contact.getFixtureA().getBody().getUserData() instanceof Integer &&
-                   (int)contact.getFixtureA().getBody().getUserData() == 1 &&
+                   (Integer)contact.getFixtureA().getBody().getUserData() == 1 &&
                     contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
                    (contact.getFixtureB().getBody().getUserData() instanceof Integer &&
                     contact.getFixtureA().getBody().getUserData() instanceof Hero &&
-                   (int)contact.getFixtureB().getBody().getUserData() == 1) &&
+                   (Integer)contact.getFixtureB().getBody().getUserData() == 1) &&
                     currentObjective == 1) {
 
                     Hero h;
@@ -323,11 +323,11 @@ class GameScreen implements Screen, InputProcessor {
                 }
 
                 if((contact.getFixtureA().getBody().getUserData() instanceof Integer &&
-                    (int)contact.getFixtureA().getBody().getUserData() == 2 &&
+                    (Integer)contact.getFixtureA().getBody().getUserData() == 2 &&
                     contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
                    (contact.getFixtureB().getBody().getUserData() instanceof Integer &&
                     contact.getFixtureA().getBody().getUserData() instanceof Hero &&
-                   (int)contact.getFixtureB().getBody().getUserData() == 2) &&
+                   (Integer)contact.getFixtureB().getBody().getUserData() == 2) &&
                     currentObjective == 2) {
 
                     Hero h;
