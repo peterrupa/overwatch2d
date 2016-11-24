@@ -16,6 +16,8 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Timer;
 import com.sun.xml.internal.bind.annotation.OverrideAnnotationOf;
 
+import static com.overwatch2d.game.GameScreen.getCurrentPlayer;
+
 class Hero extends Actor {
     private final float RESPAWN_TIMER = 5f;
 
@@ -116,7 +118,7 @@ class Hero extends Actor {
         if(isDead) {
             c = Color.GRAY;
         }
-        else if(getPlayer().getTeam() == GameScreen.getCurrentPlayer().getTeam()) {
+        else if(getPlayer().getTeam() == getCurrentPlayer().getTeam()) {
             c = new Color(0.14f, 0.7098f, 0.74901f, 1);
         }
         else {
@@ -231,7 +233,7 @@ class Hero extends Actor {
     public void damaged(int damage, Hero attacker) {
         currentHP -= damage;
 
-        if(attacker.getPlayer() == GameScreen.getCurrentPlayer()) {
+        if(attacker.getPlayer() == getCurrentPlayer()) {
             hitMarkerSound.play();
         }
 
@@ -290,7 +292,7 @@ class Hero extends Actor {
     }
 
     public void respawn() {
-        if(this == GameScreen.getCurrentPlayer().getHero()) {
+        if(this == getCurrentPlayer().getHero()) {
             GameScreen.resetMovement();
 
             respawnSound.play();
@@ -332,12 +334,14 @@ class Hero extends Actor {
         physicsBody.getFixtureList().get(0).getFilterData().categoryBits = Config.DEAD_HERO;
         isDead = true;
 
-        if(GameScreen.getCurrentPlayer().getHero() == this) {
+        if(getCurrentPlayer().getHero() == this) {
             GameScreen.setSepia();
-
+            getCurrentPlayer().incDeaths();
             GameScreen.flashNotification("You have been eliminated by " + killer.getPlayer().getName());
+
         }
-        else if(GameScreen.getCurrentPlayer().getHero() == killer) {
+        else if(getCurrentPlayer().getHero() == killer) {
+            getCurrentPlayer().incEliminations();
             GameScreen.flashNotification("Eliminated " + getPlayerName());
             eliminationSound.play();
         }

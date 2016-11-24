@@ -14,6 +14,8 @@ public class Player {
     private String name;
     private Hero hero = null;
     private int team = -1;
+    private int eliminations = 0;
+    private int deaths = 0;
 
     //constructor
     public Player(String name, InetAddress address, int port){
@@ -49,6 +51,15 @@ public class Player {
     public void setHero(Hero h) {
         this.hero = h;
     }
+
+    public int getDeaths(){ return deaths; }
+
+    public int getEliminations(){ return eliminations
+            ; }
+
+    public void incDeaths(){ deaths = deaths + 1; }
+
+    public void incEliminations(){ eliminations = eliminations + 1; }
 
     public String toString(){
         String str = "";
