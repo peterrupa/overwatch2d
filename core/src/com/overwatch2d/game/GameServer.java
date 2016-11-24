@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
@@ -16,7 +18,7 @@ public class GameServer implements Runnable, Constants {
     int playerCount = 0;
     int gameStage = WAITING_FOR_PLAYERS;
 
-    GameState game;
+    ArrayList<Player> players = new ArrayList<Player>();
 
     public GameServer(){
 
@@ -28,11 +30,11 @@ public class GameServer implements Runnable, Constants {
      *************************************/
 
     public void broadcast(String msg) {
-        for (Iterator i = game.getPlayers().keySet().iterator(); i.hasNext(); ) {
-            String name = (String) i.next();
-            Player player = (Player) game.getPlayers().get(name);
-            send(player, msg);
-        }
+//        for (Iterator i = game.getPlayers().keySet().iterator(); i.hasNext(); ) {
+//            String name = (String) i.next();
+//            Player player = (Player) game.getPlayers().get(name);
+//            send(player, msg);
+//        }
     }
 
     /*************************************
@@ -65,62 +67,33 @@ public class GameServer implements Runnable, Constants {
 
                 serverSocket.receive(packet);
 
-                System.out.println("Received request.");
+                serverSocket.close();
 
-                bytes = "Hello world".getBytes();
+                Object rawData = NetworkHelper.fromString(new String(packet.getData()));
+
+                Packet receivedPacket = (Packet)(rawData);
 
                 InetAddress address = packet.getAddress();
                 int port = packet.getPort();
 
-                packet = new DatagramPacket(bytes, bytes.length, address, port);
+                System.out.println("Received " + receivedPacket.getType() + " from " + address.toString() + ":" + port);
 
-                serverSocket.send(packet);
-                serverSocket.close();
+                switch(receivedPacket.getType()) {
+                    case "CONNECT":
+                        String name = ((ConnectPacket)receivedPacket).getName();
 
-                System.out.println("Sent pong to " + address);
+                        System.out.println("Adding " + name + " from " + address.toString() + ":" + port + " to players list");
+                        players.add(new Player(name, address, port));
+
+                        System.out.println(players);
+                        break;
+                }
+
+
             } catch (Exception ioe) {
+                System.out.println("Server Error:");
                 System.out.println(ioe);
             }
-
-//            playerData = new String(bytes);
-//            playerData = playerData.trim(); //remove excess bytes
-
-
-//            switch (gameStage) {
-//                case WAITING_FOR_PLAYERS:
-//                    if (playerData.startsWith("CONNECT")) {
-//                        String tokens[] = playerData.split(" ");
-//                        Player player = new Player(tokens[1], packet.getAddress(), packet.getPort());
-//                        System.out.println("Player connected: " + tokens[1]);
-//                        game.update(tokens[1].trim(), player);
-//                        broadcast("CONNECTED " + tokens[1]);
-//                        playerCount++;
-//                    }
-//                    break;
-//
-//                case GAME_START:
-//                    System.out.println("Game State: START");
-//                    broadcast("START");
-//                    gameStage = IN_PROGRESS;
-//                    break;
-//
-//                case IN_PROGRESS:
-//                    if (playerData.startsWith("PLAYER")) {
-//                        //Tokenize:
-//                        //The format: PLAYER <player name> <x> <y>
-//                        String[] playerInfo = playerData.split(" ");
-//                        String pname = playerInfo[1];
-//                        int x = Integer.parseInt(playerInfo[2].trim());
-//                        int y = Integer.parseInt(playerInfo[3].trim());
-//                        //Get the player from the game state
-//                        Player player = (Player) game.getPlayers().get(pname);
-//                        //Update the game state
-//                        game.update(pname, player);
-//                        //Send to all the updated game state
-//                        broadcast(game.toString());
-//                    }
-//                    break;
-//            }
         }
     }
 }

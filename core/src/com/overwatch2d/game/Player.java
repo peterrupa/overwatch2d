@@ -51,11 +51,7 @@ public class Player {
     }
 
     public String toString(){
-        String str = "";
-        str += "PLAYER ";
-        str += name+" ";
-        str += "TEAM ";
-        str += team+" ";
+        String str = "{name: \"" + name + "\", team: " + team + ", address: \"" + address.toString() + "\", port: " + port + "}";
 
         if(getHero() != null) {
             str += getHero().getBody().getWorldCenter().x + " ";

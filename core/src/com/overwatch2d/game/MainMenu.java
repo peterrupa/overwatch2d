@@ -15,6 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
 
@@ -151,11 +152,6 @@ class MainMenu implements Screen, InputProcessor {
         stage.addActor(logo);
 
         Gdx.input.setInputProcessor(stage);
-
-        // testing lang
-        Thread server = new Thread(new GameServer());
-
-        server.start();
     }
 
     @Override

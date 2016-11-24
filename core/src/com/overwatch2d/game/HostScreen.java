@@ -31,6 +31,11 @@ public class HostScreen implements Screen{
     private Stage stage;
 
     HostScreen(final Overwatch2D gam) {
+        // start server
+        Overwatch2D.createServer();
+
+        Overwatch2D.getServer().start();
+
         float w = Gdx.graphics.getWidth(),
                 h = Gdx.graphics.getHeight();
 
