@@ -25,6 +25,8 @@ public class Overwatch2D extends Game {
     static ShapeRenderer shapeRenderer;
     static BitmapFont gameUIEliminationsFont;
 
+    private static Thread server;
+
     public void create() {
         batch = new SpriteBatch();
         font = createFont("fonts/bignoodletoo.ttf", 54);
@@ -58,5 +60,13 @@ public class Overwatch2D extends Game {
         generator.dispose(); // don't forget to dispose to avoid memory leaks!
 
         return font;
+    }
+
+    public static void createServer() {
+        server = new Thread(new GameServer());
+    }
+
+    public static Thread getServer() {
+        return server;
     }
 }
