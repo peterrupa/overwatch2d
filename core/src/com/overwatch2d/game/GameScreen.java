@@ -175,6 +175,8 @@ class GameScreen implements Screen, InputProcessor {
     private static float flashNotificationTTL = 0;
     private static String flashNotificationMessage = "";
 
+    private boolean isAltTabbed = false;
+
     GameScreen(final Overwatch2D gam, ArrayList<Player> players) {
         game = gam;
         this.countdown = HERO_SELECTION_DURATION;
@@ -205,7 +207,7 @@ class GameScreen implements Screen, InputProcessor {
         PostStage = new Stage();
         selectionStage = new Stage();
 
-        TiledMap tiledMap = new TmxMapLoader().load("sampleMap.tmx");
+        TiledMap tiledMap = new TmxMapLoader().load("map/sampleMap.tmx");
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
 
         // create physics world
@@ -227,10 +229,12 @@ class GameScreen implements Screen, InputProcessor {
         world.setContactListener(new ContactListener() {
             @Override
             public void beginContact(Contact contact) {
-                if((contact.getFixtureA().getBody().getUserData() == 1 &&
-                    contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
-                   (contact.getFixtureA().getBody().getUserData() instanceof Hero &&
-                    contact.getFixtureB().getBody().getUserData() == 1) &&
+                if((contact.getFixtureA().getBody().getUserData() instanceof Integer &&
+                   (int)contact.getFixtureA().getBody().getUserData() == 1 &&
+                   contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
+                   (contact.getFixtureB().getBody().getUserData() instanceof Integer &&
+                   contact.getFixtureA().getBody().getUserData() instanceof Hero &&
+                   (int)contact.getFixtureB().getBody().getUserData() == 1) &&
                     currentObjective == 1) {
 
                     Hero h;
@@ -245,10 +249,12 @@ class GameScreen implements Screen, InputProcessor {
                     objective1Heroes.add(h);
                 }
 
-                if((contact.getFixtureA().getBody().getUserData() == 2 &&
-                    contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
-                   (contact.getFixtureA().getBody().getUserData() instanceof Hero &&
-                    contact.getFixtureB().getBody().getUserData() == 2) &&
+                if((contact.getFixtureA().getBody().getUserData() instanceof Integer &&
+                  (int)contact.getFixtureA().getBody().getUserData() == 2 &&
+                   contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
+                  (contact.getFixtureB().getBody().getUserData() instanceof Integer &&
+                   contact.getFixtureA().getBody().getUserData() instanceof Hero &&
+                  (int)contact.getFixtureB().getBody().getUserData() == 2) &&
                     currentObjective == 2) {
 
                     Hero h;
@@ -296,10 +302,12 @@ class GameScreen implements Screen, InputProcessor {
 
             @Override
             public void endContact(Contact contact) {
-                if((contact.getFixtureA().getBody().getUserData() == 1 &&
+                if((contact.getFixtureA().getBody().getUserData() instanceof Integer &&
+                   (int)contact.getFixtureA().getBody().getUserData() == 1 &&
                     contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
-                   (contact.getFixtureA().getBody().getUserData() instanceof Hero &&
-                    contact.getFixtureB().getBody().getUserData() == 1) &&
+                   (contact.getFixtureB().getBody().getUserData() instanceof Integer &&
+                    contact.getFixtureA().getBody().getUserData() instanceof Hero &&
+                   (int)contact.getFixtureB().getBody().getUserData() == 1) &&
                     currentObjective == 1) {
 
                     Hero h;
@@ -314,10 +322,12 @@ class GameScreen implements Screen, InputProcessor {
                     objective1Heroes.remove(h);
                 }
 
-                if((contact.getFixtureA().getBody().getUserData() == 2 &&
+                if((contact.getFixtureA().getBody().getUserData() instanceof Integer &&
+                    (int)contact.getFixtureA().getBody().getUserData() == 2 &&
                     contact.getFixtureB().getBody().getUserData() instanceof Hero) ||
-                   (contact.getFixtureA().getBody().getUserData() instanceof Hero &&
-                    contact.getFixtureB().getBody().getUserData() == 2) &&
+                   (contact.getFixtureB().getBody().getUserData() instanceof Integer &&
+                    contact.getFixtureA().getBody().getUserData() instanceof Hero &&
+                   (int)contact.getFixtureB().getBody().getUserData() == 2) &&
                     currentObjective == 2) {
 
                     Hero h;
@@ -864,6 +874,8 @@ class GameScreen implements Screen, InputProcessor {
     @Override
     public void pause() {
         Gdx.input.setCursorCatched(false);
+
+        isAltTabbed = true;
     }
 
     @Override
@@ -874,6 +886,8 @@ class GameScreen implements Screen, InputProcessor {
         if(state == IN_BATTLE || state == POST_GAME) {
             Gdx.input.setCursorCatched(true);
         }
+
+        isAltTabbed = false;
     }
 
     @Override
@@ -915,7 +929,9 @@ class GameScreen implements Screen, InputProcessor {
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
         if(state == IN_BATTLE || state == POST_GAME) {
-            Gdx.input.setCursorPosition(Math.max(Math.min(screenX, Gdx.graphics.getWidth()), 0), Math.max(Math.min(screenY, Gdx.graphics.getHeight()), 0));
+            if(!isAltTabbed) {
+                Gdx.input.setCursorPosition(Math.max(Math.min(screenX, Gdx.graphics.getWidth()), 0), Math.max(Math.min(screenY, Gdx.graphics.getHeight()), 0));
+            }
 
             Vector3 hoverCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
             Vector3 position = camera.unproject(hoverCoordinates);

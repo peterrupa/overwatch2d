@@ -19,7 +19,7 @@ import com.sun.xml.internal.bind.annotation.OverrideAnnotationOf;
 class Hero extends Actor {
     private final float RESPAWN_TIMER = 5f;
 
-    private Texture texture = new Texture(Gdx.files.internal("actor.png"));
+    private Texture texture = new Texture(Gdx.files.internal("sprites/actor.png"));
     private Body physicsBody;
     private float speed = 4f;
     private float projectileSpawnDistance = 0.30f;
