@@ -21,7 +21,9 @@ public class Overwatch2D extends Game {
     static BitmapFont gameSelectionOKFont;
     static BitmapFont gameSelectionCountdownFont;
     static BitmapFont gamePostgamefont;
+    static BitmapFont gameUIDeathsFont;
     static ShapeRenderer shapeRenderer;
+    static BitmapFont gameUIEliminationsFont;
 
     public void create() {
         batch = new SpriteBatch();
@@ -37,6 +39,8 @@ public class Overwatch2D extends Game {
         gameSelectionOKFont = createFont("fonts/koverwatch.ttf", 30);
         gameSelectionCountdownFont = createFont("fonts/bignoodletoo.ttf", 24);
         gamePostgamefont = createFont("fonts/bignoodletoo.ttf", 150);
+        gameUIDeathsFont = createFont("fonts/bignoodletoo.ttf", 30);
+        gameUIEliminationsFont = createFont("fonts/bignoodletoo.ttf", 30);
         shapeRenderer = new ShapeRenderer();
 
         this.setScreen(new MainMenu(this));

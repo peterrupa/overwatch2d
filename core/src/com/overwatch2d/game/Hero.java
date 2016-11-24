@@ -337,11 +337,13 @@ class Hero extends Actor {
         if(getCurrentPlayer().getHero() == this) {
             GameScreen.setSepia();
             getCurrentPlayer().incDeaths();
+            GameScreen.updateDeathsLabel("Deaths: " + getCurrentPlayer().getDeaths());
             GameScreen.flashNotification("You have been eliminated by " + killer.getPlayer().getName());
 
         }
         else if(getCurrentPlayer().getHero() == killer) {
             getCurrentPlayer().incEliminations();
+            GameScreen.updateEliminationsLabel("Kills: " + getCurrentPlayer().getEliminations());
             GameScreen.flashNotification("Eliminated " + getPlayerName());
             eliminationSound.play();
         }

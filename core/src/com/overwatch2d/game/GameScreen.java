@@ -94,6 +94,8 @@ class GameScreen implements Screen, InputProcessor {
     private Label defeatLabel;
     private Label battleCountdownLabel;
     private static Label objectiveLabel;
+    public static Label deathsLabel;
+    public static Label eliminationsLabel;
 
     private static float objectiveFlashTTL;
 
@@ -1026,6 +1028,7 @@ class GameScreen implements Screen, InputProcessor {
 
     private void initUIElements() {
         // UI Elements
+
         Label.LabelStyle healthStyle = new Label.LabelStyle();
         healthStyle.font = game.gameUIHealthFont;
 
@@ -1033,6 +1036,22 @@ class GameScreen implements Screen, InputProcessor {
         healthLabel.setPosition(160, 90);
 
         UIStage.addActor(healthLabel);
+
+        Label.LabelStyle deathsStyle = new Label.LabelStyle();
+        deathsStyle.font = game.gameUIDeathsFont;
+
+        deathsLabel = new Label("Deaths: 0", deathsStyle);
+        deathsLabel.setPosition(170, 110);
+
+        UIStage.addActor(deathsLabel);
+
+        Label.LabelStyle eliminationsStyle = new Label.LabelStyle();
+        eliminationsStyle.font = game.gameUIEliminationsFont;
+
+        eliminationsLabel = new Label("Kills: 0", eliminationsStyle);
+        eliminationsLabel.setPosition(170, 140);
+
+        UIStage.addActor(eliminationsLabel);
 
         Label.LabelStyle ammoCountStyle = new Label.LabelStyle();
         ammoCountStyle.font = game.gameUIAmmoCountFont;
@@ -1124,6 +1143,14 @@ class GameScreen implements Screen, InputProcessor {
         objectiveLabel.setText(msg);
 
         objectiveFlashTTL = OBJECTIVE_FLASH_TIME;
+    }
+
+    public static void updateDeathsLabel(String msg) {
+        deathsLabel.setText(msg);
+    }
+
+    public static void updateEliminationsLabel(String msg) {
+        eliminationsLabel.setText(msg);
     }
 
     private void setObjective(int obj) {
