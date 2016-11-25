@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import static com.overwatch2d.game.GameScreen.flashObjective;
 
 class GameScreen implements Screen, InputProcessor {
-    private final Overwatch2D game;
+    private Overwatch2D game = null;
 
     public static final float ATTACKERS_SPAWN_X = 100;
     public static final float ATTACKERS_SPAWN_Y = 100;
@@ -177,15 +177,19 @@ class GameScreen implements Screen, InputProcessor {
 
     private boolean isAltTabbed = false;
 
-    GameScreen(final Overwatch2D gam, ArrayList<Player> players) {
+    GameScreen(final Overwatch2D gam, ArrayList<Player> players, String name) {
         game = gam;
         this.countdown = HERO_SELECTION_DURATION;
         this.players = players;
 
         try {
+            System.out.println("Name: "  + name);
             for(Player p: players) {
-                if(p.getAddress().equals(InetAddress.getByName("192.168.0.1"))) {
+                System.out.println(p);
+                if(p.getName().equals(name)) {
                     currentPlayer = p;
+
+                    System.out.println("SET CURRENT PLAYER");
 
                     break;
                 }
@@ -213,9 +217,9 @@ class GameScreen implements Screen, InputProcessor {
         // create physics world
         world = new World(new Vector2(0, 0), true);
 
-        heroes.add(new Hero(200, 500, players.get(1)));
-        heroes.add(new Hero(1100, 1100, players.get(2)));
-        heroes.add(new Hero(1200, 1100, players.get(3)));
+//        heroes.add(new Hero(200, 500, players.get(1)));
+//        heroes.add(new Hero(1100, 1100, players.get(2)));
+//        heroes.add(new Hero(1200, 1100, players.get(3)));
 
         debugRenderer = new Box2DDebugRenderer();
 
@@ -613,10 +617,10 @@ class GameScreen implements Screen, InputProcessor {
         else {
             LeftMouseHold = false;
         }
-
-        if(!heroes.get(1).isDead()) {
-            heroes.get(1).firePrimary(0, 0);
-        }
+//
+//        if(!heroes.get(1).isDead()) {
+//            heroes.get(1).firePrimary(0, 0);
+//        }
 
         for(Projectile p: projectilesDestroyed) {
             world.destroyBody(p.getBody());

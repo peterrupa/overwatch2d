@@ -22,8 +22,10 @@ public class Overwatch2D extends Game {
     static BitmapFont gameSelectionCountdownFont;
     static BitmapFont gamePostgamefont;
     static ShapeRenderer shapeRenderer;
+    static Thread clientReceiver;
+    static Thread serverReceiver;
 
-    private static Thread server;
+    private static GameServer server;
 
     public void create() {
         batch = new SpriteBatch();
@@ -59,10 +61,16 @@ public class Overwatch2D extends Game {
     }
 
     public static void createServer() {
-        server = new Thread(new GameServer());
+        server = new GameServer("Host");
+        NetworkHelper.createServerReceiver().start();
     }
 
-    public static Thread getServer() {
+    public static void createClient() {
+        clientReceiver = NetworkHelper.createClientReceiver();
+        clientReceiver.start();
+    }
+
+    public static GameServer getServer() {
         return server;
     }
 }

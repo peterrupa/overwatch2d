@@ -16,7 +16,9 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Timer;
 import com.sun.xml.internal.bind.annotation.OverrideAnnotationOf;
 
-class Hero extends Actor {
+import java.io.Serializable;
+
+class Hero extends Actor implements Serializable {
     private final float RESPAWN_TIMER = 5f;
 
     private Texture texture = new Texture(Gdx.files.internal("sprites/actor.png"));

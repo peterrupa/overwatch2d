@@ -1,52 +1,145 @@
 package com.overwatch2d.game;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.io.*;
-import java.util.Base64;
+import com.badlogic.gdx.Gdx;
+
+import java.net.*;
+import java.util.ArrayList;
 
 public class NetworkHelper implements Constants {
     public static void connect(String host, String name) {
         try {
-            byte message[];
+            System.out.println("Sending CONNECT to " + host);
 
-            InetAddress address = InetAddress.getByName(host);
-
-            message = toString(new ConnectPacket(name)).getBytes();
-
-            DatagramPacket packet = new DatagramPacket(message, message.length, address, PORT);
-            DatagramSocket socket = new DatagramSocket();
-
-            socket.send(packet);
-
-            System.out.println("CONNECT request sent to " + host);
-
-            socket.close();
+            NetworkHelper.clientSend(new ConnectPacket(name), InetAddress.getByName(host));
         }
-        catch(Exception e) {
-            System.out.println("Client error:");
-            System.out.println(e);
+        catch(Exception e) {}
+    }
+
+    public static Thread createClientReceiver() {
+        Thread t = new Thread(() -> {
+            System.out.println("Client receiver started");
+
+            while(true) {
+                try {
+                    byte[] bytes = new byte[2048];
+                    DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
+
+                    System.out.println("Client waiting to receive.");
+
+                    MulticastSocket s = new MulticastSocket(CLIENT_PORT);
+
+                    s.receive(packet);
+
+                    s.close();
+
+                    Object rawData = Serialize.toObject(packet.getData());
+
+                    Packet receivedPacket = (Packet)(rawData);
+
+                    InetAddress address = packet.getAddress();
+                    int port = packet.getPort();
+
+                    System.out.println("[Client] Received " + receivedPacket.getType() + " from " + address.toString() + ":" + port);
+
+                    switch(receivedPacket.getType()) {
+                        case "PLAYER_LIST":
+                            ArrayList<Player> players = ((PlayerListPacket)receivedPacket).getPlayers();
+
+                            JoinGameScreen.setPlayers(players);
+
+                            break;
+                        case "START_GAME":
+                            new Thread(() -> Gdx.app.postRunnable(() -> JoinGameScreen.startGame())).start();
+
+                            break;
+                    }
+                } catch (Exception ioe) {
+                    System.out.println("Client Error:");
+                    System.out.println(ioe);
+                }
+            }
+        });
+
+        return t;
+    }
+
+    public static Thread createServerReceiver() {
+        Thread t = new Thread(() -> {
+            System.out.println("Server receiver started");
+
+            while(true) {
+                try {
+                    byte[] bytes = new byte[256];
+                    DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
+
+                    System.out.println("Server waiting for request!");
+
+                    MulticastSocket s = new MulticastSocket(PORT);
+
+                    s.receive(packet);
+
+                    s.close();
+
+                    Object rawData = Serialize.toObject(packet.getData());
+
+                    Packet receivedPacket = (Packet)(rawData);
+
+                    InetAddress address = packet.getAddress();
+                    int port = packet.getPort();
+
+                    System.out.println("[Server] Received " + receivedPacket.getType() + " from " + address.toString() + ":" + port);
+
+                    switch(receivedPacket.getType()) {
+                        case "CONNECT":
+                            String name = ((ConnectPacket)receivedPacket).getName();
+
+                            Overwatch2D.getServer().connectPlayer(name, address);
+                            break;
+                    }
+
+
+                } catch (Exception ioe) {
+                    System.out.println("Server Error:");
+                    System.out.println(ioe);
+                }
+            }
+        });
+
+        return t;
+    }
+
+    public static void clientSend(Packet p, InetAddress address) {
+        try {
+            DatagramPacket packet;
+            byte buf[] = Serialize.toBytes(p);
+            packet = new DatagramPacket(buf, buf.length, address, PORT);
+
+            MulticastSocket s = new MulticastSocket(CLIENT_PORT);
+
+            s.send(packet);
+
+            s.close();
+        } catch (Exception ioe) {
+            ioe.printStackTrace();
         }
     }
 
-    public static Object fromString(String s) throws IOException,
-            ClassNotFoundException {
-        byte [] data = Base64.getMimeDecoder().decode(s);
-        ObjectInputStream ois = new ObjectInputStream(
-                new ByteArrayInputStream(data));
-        Object o  = ois.readObject();
-        ois.close();
-        return o;
-    }
+    public static void serverSend(Packet p, InetAddress address) {
+        try {
+            DatagramPacket packet;
+            byte buf[] = Serialize.toBytes(p);
 
-    /** Write the object to a Base64 string. */
-    public static String toString(Serializable o) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(o);
-        oos.close();
-        return Base64.getEncoder().encodeToString(baos.toByteArray());
+            packet = new DatagramPacket(buf, buf.length, address, CLIENT_PORT);
+
+            MulticastSocket s = new MulticastSocket(PORT);
+
+            s.send(packet);
+
+            s.close();
+
+            System.out.println("Server sent to " + address.toString() + ":" + CLIENT_PORT);
+        } catch (Exception ioe) {
+            ioe.printStackTrace();
+        }
     }
 }
