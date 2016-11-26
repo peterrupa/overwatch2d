@@ -66,7 +66,7 @@ class Hero extends Actor implements Serializable {
         bodyDef.type = BodyDef.BodyType.DynamicBody;
         bodyDef.position.set(getX() / Config.PIXELS_TO_METERS, getY() / Config.PIXELS_TO_METERS);
 
-        physicsBody = GameScreen.world.createBody(bodyDef);
+        physicsBody = GameScreen.getGameState().getWorld().createBody(bodyDef);
 
         PolygonShape shape = new PolygonShape();
         shape.setAsBox(getWidth()/2 / Config.PIXELS_TO_METERS, getHeight()/2 / Config.PIXELS_TO_METERS);
@@ -199,7 +199,7 @@ class Hero extends Actor implements Serializable {
             float initialX = ((physicsBody.getWorldCenter().x + projectileXOffset * (float)Math.cos(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.cos(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
             float initialY = ((physicsBody.getWorldCenter().y + projectileXOffset * (float)Math.sin(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.sin(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
 
-            GameScreen.projectiles.add(new Projectile(
+            GameScreen.getGameState().getProjectiles().add(new Projectile(
                 initialX,
                 initialY,
                 x,
@@ -301,12 +301,12 @@ class Hero extends Actor implements Serializable {
         float spawnX, spawnY;
 
         if(getPlayer().getTeam() == 0) {
-            spawnX = GameScreen.ATTACKERS_SPAWN_X;
-            spawnY = GameScreen.ATTACKERS_SPAWN_Y;
+            spawnX = GameState.getAttackersSpawnX();
+            spawnY = GameState.getAttackersSpawnY();
         }
         else {
-            spawnX = GameScreen.DEFENDERS_SPAWN_X;
-            spawnY = GameScreen.DEFENDERS_SPAWN_Y;
+            spawnX = GameState.getDefendersSpawnX();
+            spawnY = GameState.getDefendersSpawnY();
         }
 
         physicsBody.setTransform(spawnX / Config.PIXELS_TO_METERS, spawnY / Config.PIXELS_TO_METERS, physicsBody.getAngle());
@@ -348,7 +348,7 @@ class Hero extends Actor implements Serializable {
     }
 
     public void dispose() {
-        GameScreen.heroesDestroyed.add(this);
+        GameScreen.getGameState().getHeroesDestroyed().add(this);
         this.remove();
     }
 
