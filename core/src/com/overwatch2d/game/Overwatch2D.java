@@ -21,9 +21,11 @@ public class Overwatch2D extends Game {
     static BitmapFont gameSelectionOKFont;
     static BitmapFont gameSelectionCountdownFont;
     static BitmapFont gamePostgamefont;
+    static BitmapFont gameTeamLabelsFont;
     static ShapeRenderer shapeRenderer;
     static Thread clientReceiver;
     static Thread serverReceiver;
+    private static String name = Math.random() + "";
 
     private static GameServer server;
 
@@ -41,6 +43,7 @@ public class Overwatch2D extends Game {
         gameSelectionOKFont = createFont("fonts/koverwatch.ttf", 30);
         gameSelectionCountdownFont = createFont("fonts/bignoodletoo.ttf", 24);
         gamePostgamefont = createFont("fonts/bignoodletoo.ttf", 150);
+        gameTeamLabelsFont = createFont("fonts/bignoodletoo.ttf", 60);
         shapeRenderer = new ShapeRenderer();
 
         this.setScreen(new MainMenu(this));
@@ -61,7 +64,7 @@ public class Overwatch2D extends Game {
     }
 
     public static void createServer() {
-        server = new GameServer("Host");
+        server = new GameServer();
         NetworkHelper.createServerReceiver().start();
     }
 
@@ -72,5 +75,9 @@ public class Overwatch2D extends Game {
 
     public static GameServer getServer() {
         return server;
+    }
+
+    public static String getName() {
+        return Overwatch2D.name;
     }
 }

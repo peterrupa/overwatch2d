@@ -1,12 +1,15 @@
 package com.overwatch2d.game;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 /**
  * Created by geeca on 11/16/16.
@@ -17,10 +20,8 @@ public class GameServer implements Constants {
     /*************************************
      * for broadcasting data to all players
      *************************************/
-    public GameServer(String name) {
+    public GameServer() {
         try {
-            players.add(new Player(name, InetAddress.getByName("localhost")));
-
             HostScreen.setPlayers(players);
         }
         catch(Exception e) {
@@ -51,6 +52,16 @@ public class GameServer implements Constants {
         players.add(new Player(name, address));
 
         System.out.println(name + " " + address + " joined");
+
+        broadcast(new PlayerListPacket(players));
+
+        HostScreen.setPlayers(players);
+    }
+
+    public void changeTeam(String name, int team) {
+        Player changer = players.stream().filter(p -> p.getName().equals(name)).collect(Collectors.toList()).get(0);
+
+        changer.setTeam(team);
 
         broadcast(new PlayerListPacket(players));
 

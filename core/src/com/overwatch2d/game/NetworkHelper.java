@@ -6,11 +6,17 @@ import java.net.*;
 import java.util.ArrayList;
 
 public class NetworkHelper implements Constants {
+    private static InetAddress host;
+
     public static void connect(String host, String name) {
         try {
             System.out.println("Sending CONNECT to " + host);
 
-            NetworkHelper.clientSend(new ConnectPacket(name), InetAddress.getByName(host));
+            InetAddress hostAddress = InetAddress.getByName(host);
+
+            NetworkHelper.host = hostAddress;
+
+            NetworkHelper.clientSend(new ConnectPacket(name), hostAddress);
         }
         catch(Exception e) {}
     }
@@ -45,11 +51,11 @@ public class NetworkHelper implements Constants {
                         case "PLAYER_LIST":
                             ArrayList<Player> players = ((PlayerListPacket)receivedPacket).getPlayers();
 
-                            JoinGameScreen.setPlayers(players);
+                            JoinScreen.setPlayers(players);
 
                             break;
                         case "START_GAME":
-                            new Thread(() -> Gdx.app.postRunnable(() -> JoinGameScreen.startGame())).start();
+                            new Thread(() -> Gdx.app.postRunnable(() -> JoinScreen.startGame())).start();
 
                             break;
                     }
@@ -90,14 +96,19 @@ public class NetworkHelper implements Constants {
                     System.out.println("[Server] Received " + receivedPacket.getType() + " from " + address.toString() + ":" + port);
 
                     switch(receivedPacket.getType()) {
-                        case "CONNECT":
+                        case "CONNECT": {
                             String name = ((ConnectPacket)receivedPacket).getName();
 
                             Overwatch2D.getServer().connectPlayer(name, address);
                             break;
+                        }
+                        case "CHANGE_TEAM": {
+                            String name = ((ChangeTeamPacket)receivedPacket).getName();
+                            int team = ((ChangeTeamPacket)receivedPacket).getTeam();
+
+                            Overwatch2D.getServer().changeTeam(name, team);
+                        }
                     }
-
-
                 } catch (Exception ioe) {
                     System.out.println("Server Error:");
                     System.out.println(ioe);
@@ -141,5 +152,9 @@ public class NetworkHelper implements Constants {
         } catch (Exception ioe) {
             ioe.printStackTrace();
         }
+    }
+
+    public static InetAddress getHost() {
+        return NetworkHelper.host;
     }
 }

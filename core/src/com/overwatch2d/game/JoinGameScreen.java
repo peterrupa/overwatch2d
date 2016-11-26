@@ -23,13 +23,10 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 public class JoinGameScreen implements Screen, InputProcessor {
-
     private static Overwatch2D game = null;
     private OrthographicCamera camera;
     private Stage stage;
     private Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
-
-    private static ArrayList<Player> players;
 
     JoinGameScreen(final Overwatch2D gam) {
         float w = Gdx.graphics.getWidth(),
@@ -71,7 +68,7 @@ public class JoinGameScreen implements Screen, InputProcessor {
                 String ip = textbox.getText();
 
                 Overwatch2D.createClient();
-                NetworkHelper.connect(ip, "Player lol");
+                NetworkHelper.connect(ip, Overwatch2D.getName());
                 game.setScreen(new JoinScreen(game)); // temp
                 dispose();
             }
@@ -161,17 +158,5 @@ public class JoinGameScreen implements Screen, InputProcessor {
     @Override
     public void dispose() {
 
-    }
-
-    public static void setPlayers(ArrayList<Player> players) {
-        JoinGameScreen.players = players;
-
-        System.out.println("Join screen:");
-        System.out.println(players);
-    }
-
-    public static void startGame() {
-        System.out.println(players);
-        game.setScreen(new GameScreen(game, players, "Player lol"));
     }
 }
