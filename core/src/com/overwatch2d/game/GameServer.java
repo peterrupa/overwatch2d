@@ -1,99 +1,82 @@
 package com.overwatch2d.game;
 
+import com.badlogic.gdx.utils.Json;
+
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
+import static java.lang.Thread.sleep;
 
 /**
  * Created by geeca on 11/16/16.
- * Reference from Circle Wars (Hermocilla)
  */
-public class GameServer implements Runnable, Constants {
-
-    String playerData;
-    int playerCount = 0;
-    int gameStage = WAITING_FOR_PLAYERS;
-
+public class GameServer implements Constants {
     ArrayList<Player> players = new ArrayList<Player>();
-
-    public GameServer(){
-
-        System.out.println("Game created");
-    }
 
     /*************************************
      * for broadcasting data to all players
      *************************************/
+    public GameServer() {
+        System.out.println("Game server started");
+    }
 
-    public void broadcast(String msg) {
-//        for (Iterator i = game.getPlayers().keySet().iterator(); i.hasNext(); ) {
-//            String name = (String) i.next();
-//            Player player = (Player) game.getPlayers().get(name);
-//            send(player, msg);
-//        }
+    public void broadcast(Packet packet) {
+        for(Player p: players) {
+            send(p, packet);
+        }
     }
 
     /*************************************
      * for sending a message to a player
      *************************************/
 
-    public void send(Player player, String msg) {
-//        DatagramPacket packet;
-//        byte buf[] = msg.getBytes();
-//        packet = new DatagramPacket(buf, buf.length, player.getAddress(), player.getPort());
-//        try {
-//            serverSocket.send(packet);
-//        } catch (IOException ioe) {
-//            ioe.printStackTrace();
-//        }
-    }
-
-    public void setGameState(int setGameState){
-        this.gameStage = gameStage;
-    }
-
-    @Override
-    public void run(){
-        while(true) {
-            try {
-                DatagramSocket serverSocket = new DatagramSocket(PORT);
-
-                byte[] bytes = new byte[256];
-                DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
-
-                serverSocket.receive(packet);
-
-                serverSocket.close();
-
-                Object rawData = NetworkHelper.fromString(new String(packet.getData()));
-
-                Packet receivedPacket = (Packet)(rawData);
-
-                InetAddress address = packet.getAddress();
-                int port = packet.getPort();
-
-                System.out.println("Received " + receivedPacket.getType() + " from " + address.toString() + ":" + port);
-
-                switch(receivedPacket.getType()) {
-                    case "CONNECT":
-                        String name = ((ConnectPacket)receivedPacket).getName();
-
-                        System.out.println("Adding " + name + " from " + address.toString() + ":" + port + " to players list");
-                        players.add(new Player(name, address, port));
-
-                        System.out.println(players);
-                        break;
-                }
-
-
-            } catch (Exception ioe) {
-                System.out.println("Server Error:");
-                System.out.println(ioe);
-            }
+    public void send(Player player, Packet packet) {
+        try {
+            NetworkHelper.serverSend(packet, player.getAddress(), player.getPort());
         }
+        catch(Exception e) {}
+    }
+
+    public void connectPlayer(String name, InetAddress address, int port) {
+        players.add(new Player(name, address, port));
+
+        System.out.println(name + " " + address + ":" + port + " joined");
+
+        broadcast(new Packet("PLAYER_LIST", new PlayerListPacket(players)));
+
+        HostScreen.setPlayers(players);
+    }
+
+    public void changeTeam(String name, int team) {
+        Player changer = players.stream().filter(p -> p.getName().equals(name)).collect(Collectors.toList()).get(0);
+
+        changer.setTeam(team);
+        broadcast(new Packet("CHANGE_TEAM", new ChangeTeamPacket(name, team)));
+
+        HostScreen.setPlayers(players);
+    }
+
+    public void startGame() {
+        broadcast(new Packet("START_GAME", new StartGamePacket()));
+    }
+
+    public void spawnHero(String name) {
+        broadcast(new Packet("HERO_SPAWN", new HeroSpawnPacket(name)));
+    }
+
+    public void updateHero(String name, float x, float y, float angle, int currentHP, boolean isDead, float timeToRespawn) {
+        broadcast(new Packet("HERO_UPDATE", new HeroUpdatePacket(name, x, y, angle, currentHP, isDead, timeToRespawn)));
+    }
+
+    public void firePrimary(String name, float x, float y) {
+        broadcast(new Packet("HERO_FIRE_PRIMARY", new HeroFirePrimary(name, x, y)));
     }
 }

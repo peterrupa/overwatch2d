@@ -21,9 +21,14 @@ public class Overwatch2D extends Game {
     static BitmapFont gameSelectionOKFont;
     static BitmapFont gameSelectionCountdownFont;
     static BitmapFont gamePostgamefont;
+    static BitmapFont gameTeamLabelsFont;
+    static BitmapFont gameInformationFont;
     static ShapeRenderer shapeRenderer;
+    static Thread clientReceiver;
+    static Thread serverReceiver;
+    private static String name = (int)Math.floor(Math.random() * 100) + "";
 
-    private static Thread server;
+    private static GameServer server;
 
     public void create() {
         batch = new SpriteBatch();
@@ -39,13 +44,22 @@ public class Overwatch2D extends Game {
         gameSelectionOKFont = createFont("fonts/koverwatch.ttf", 30);
         gameSelectionCountdownFont = createFont("fonts/bignoodletoo.ttf", 24);
         gamePostgamefont = createFont("fonts/bignoodletoo.ttf", 150);
+        gameTeamLabelsFont = createFont("fonts/bignoodletoo.ttf", 60);
+        gameInformationFont = createFont("fonts/koverwatch.ttf", 15);
         shapeRenderer = new ShapeRenderer();
 
         this.setScreen(new MainMenu(this));
     }
 
     public void render() {
-        super.render();
+        try {
+            super.render();
+        }
+        catch(Exception e) {
+            System.out.println(e);
+            System.out.println(e.getMessage());
+            Gdx.app.exit();
+        }
     }
 
     private BitmapFont createFont(String filename, int size) {
@@ -59,10 +73,20 @@ public class Overwatch2D extends Game {
     }
 
     public static void createServer() {
-        server = new Thread(new GameServer());
+        NetworkHelper.createServerReceiver().start();
+        server = new GameServer();
     }
 
-    public static Thread getServer() {
+    public static void createClient() {
+        clientReceiver = NetworkHelper.createClientReceiver();
+        clientReceiver.start();
+    }
+
+    public static GameServer getServer() {
         return server;
+    }
+
+    public static String getName() {
+        return Overwatch2D.name;
     }
 }

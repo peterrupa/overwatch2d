@@ -33,7 +33,7 @@ class Projectile extends Actor {
         bodyDef.type = BodyDef.BodyType.DynamicBody;
         bodyDef.position.set(getX() / Config.PIXELS_TO_METERS, getY() / Config.PIXELS_TO_METERS);
 
-        physicsBody = GameScreen.world.createBody(bodyDef);
+        physicsBody = GameScreen.getGameState().getWorld().createBody(bodyDef);
 
         PolygonShape shape = new PolygonShape();
         shape.setAsBox(getWidth()/2 / Config.PIXELS_TO_METERS, getHeight()/2 / Config.PIXELS_TO_METERS);
@@ -121,7 +121,7 @@ class Projectile extends Actor {
     }
 
     public void die() {
-        GameScreen.projectilesDestroyed.add(this);
+        GameScreen.getGameState().getProjectilesDestroyed().add(this);
         this.remove();
     }
 

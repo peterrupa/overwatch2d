@@ -1,4 +1,5 @@
 package com.overwatch2d.game;
+import java.io.Serializable;
 import java.net.InetAddress;
 
 /**
@@ -7,13 +8,13 @@ import java.net.InetAddress;
  * Network of players
  */
 
-public class Player {
+public class Player implements Serializable {
 
     private InetAddress address;
-    private int port;
     private String name;
     private Hero hero = null;
-    private int team = -1;
+    private int team = 0;
+    private int port;
 
     //constructor
     public Player(String name, InetAddress address, int port){
@@ -22,12 +23,10 @@ public class Player {
         this.port = port;
     }
 
+    public Player() {}
+
     public InetAddress getAddress(){
         return address;
-    }
-
-    public int getPort(){
-        return port;
     }
 
     public Hero getHero(){
@@ -51,15 +50,13 @@ public class Player {
     }
 
     public String toString(){
-        String str = "{name: \"" + name + "\", team: " + team + ", address: \"" + address.toString() + "\", port: " + port + "}";
-
-        if(getHero() != null) {
-            str += getHero().getBody().getWorldCenter().x + " ";
-            str += getHero().getBody().getWorldCenter().y ;
-        }
+        String str = "{name: \"" + name + "\", team: " + team + ", address: \"" + address.toString() + "\"}";
 
         return str;
     }
 
 
+    public int getPort() {
+        return port;
+    }
 }

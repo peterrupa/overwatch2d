@@ -1,5 +1,6 @@
 package com.overwatch2d.game.desktop;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.overwatch2d.game.Overwatch2D;
@@ -12,7 +13,8 @@ public class DesktopLauncher {
         config.vSyncEnabled = true;
         config.width = 1366;
         config.height = 768;
+        config.backgroundFPS = 0;
 
-		new LwjglApplication(new Overwatch2D(), config);
+        new LwjglApplication(new Overwatch2D(), config);
 	}
 }
