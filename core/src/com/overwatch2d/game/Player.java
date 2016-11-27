@@ -52,11 +52,6 @@ public class Player implements Serializable {
     public String toString(){
         String str = "{name: \"" + name + "\", team: " + team + ", address: \"" + address.toString() + "\"}";
 
-        if(getHero() != null) {
-            str += getHero().getBody().getWorldCenter().x + " ";
-            str += getHero().getBody().getWorldCenter().y ;
-        }
-
         return str;
     }
 

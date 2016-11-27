@@ -359,4 +359,16 @@ class Hero extends Actor implements Serializable {
     public float getTimeToRespawn() {
         return timeToRespawn;
     }
+
+    public void setCurrentHP(int x) {
+        currentHP = x;
+    }
+
+    public void setIsDead(boolean x) {
+        isDead = x;
+    }
+
+    public void setTimeToRespawn(float x) {
+        timeToRespawn = x;
+    }
 }

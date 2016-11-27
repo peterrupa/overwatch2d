@@ -50,6 +50,7 @@ public class NetworkHelper implements Constants {
                     InetAddress address = packet.getAddress();
                     int port = packet.getPort();
 
+                    if(receivedPacket.getType() != "HERO_UPDATE")
                     System.out.println("[Client] Received " + receivedPacket.getType() + " from " + address.toString() + ":" + port);
 
                     switch(receivedPacket.getType()) {
@@ -70,6 +71,13 @@ public class NetworkHelper implements Constants {
 
                             break;
                         }
+                        case "CHANGE_TEAM": {
+                            String name = ((ChangeTeamPacket)receivedPacket.getPayload()).getName();
+                            int team = ((ChangeTeamPacket)receivedPacket.getPayload()).getTeam();
+
+                            JoinScreen.changeTeam(name, team);
+                            break;
+                        }
                         case "HERO_SPAWN": {
                             String playername = ((HeroSpawnPacket)receivedPacket.getPayload()).getPlayername();
 
@@ -77,11 +85,31 @@ public class NetworkHelper implements Constants {
 
                             break;
                         }
-                        case "CHANGE_TEAM": {
-                            String name = ((ChangeTeamPacket)receivedPacket.getPayload()).getName();
-                            int team = ((ChangeTeamPacket)receivedPacket.getPayload()).getTeam();
+                        case "HERO_UPDATE": {
+                            HeroUpdatePacket p = ((HeroUpdatePacket)receivedPacket.getPayload());
 
-                            JoinScreen.changeTeam(name, team);
+                            String name = p.getName();
+                            float x = p.getX();
+                            float y = p.getY();
+                            float angle = p.getAngle();
+                            int currentHP = p.getCurrentHP();
+                            boolean isDead = p.isDead();
+                            float timeToRespawn = p.getTimeToRespawn();
+
+                            Gdx.app.postRunnable(() -> GameScreen.updateHero(name, x, y, angle, currentHP, isDead, timeToRespawn));
+
+                            break;
+                        }
+                        case "HERO_FIRE_PRIMARY": {
+                            HeroFirePrimary p = ((HeroFirePrimary)receivedPacket.getPayload());
+
+                            String name = p.getName();
+                            float x = p.getX();
+                            float y = p.getY();
+
+
+                            Gdx.app.postRunnable(() -> GameScreen.firePrimary(name, x, y));
+
                             break;
                         }
                     }
@@ -117,6 +145,7 @@ public class NetworkHelper implements Constants {
                     InetAddress address = packet.getAddress();
                     int port = packet.getPort();
 
+                    if(receivedPacket.getType() != "HERO_UPDATE")
                     System.out.println("[Server] Received " + receivedPacket.getType() + " from " + address.toString() + ":" + port);
 
                     switch(receivedPacket.getType()) {
@@ -131,11 +160,41 @@ public class NetworkHelper implements Constants {
                             int team = ((ChangeTeamPacket)receivedPacket.getPayload()).getTeam();
 
                             Overwatch2D.getServer().changeTeam(name, team);
+
+                            break;
                         }
                         case "HERO_SPAWN": {
                             String name = ((HeroSpawnPacket)receivedPacket.getPayload()).getPlayername();
 
                             Overwatch2D.getServer().spawnHero(name);
+
+                            break;
+                        }
+                        case "HERO_UPDATE": {
+                            HeroUpdatePacket p = ((HeroUpdatePacket)receivedPacket.getPayload());
+
+                            String name = p.getName();
+                            float x = p.getX();
+                            float y = p.getY();
+                            float angle = p.getAngle();
+                            int currentHP = p.getCurrentHP();
+                            boolean isDead = p.isDead();
+                            float timeToRespawn = p.getTimeToRespawn();
+
+                            Overwatch2D.getServer().updateHero(name, x, y, angle, currentHP, isDead, timeToRespawn);
+
+                            break;
+                        }
+                        case "HERO_FIRE_PRIMARY": {
+                            HeroFirePrimary p = ((HeroFirePrimary)receivedPacket.getPayload());
+
+                            String name = p.getName();
+                            float x = p.getX();
+                            float y = p.getY();
+
+                            Overwatch2D.getServer().firePrimary(name, x, y);
+
+                            break;
                         }
                     }
                 } catch (Exception ioe) {
@@ -154,6 +213,7 @@ public class NetworkHelper implements Constants {
             byte buf[] = Serialize.toBytes(p);
             packet = new DatagramPacket(buf, buf.length, address, PORT);
 
+            if(p.getType() != "HERO_UPDATE")
             System.out.println("[Client] Sending " + p.getType() + " (" + packet.getLength() +"B) to " + address);
 
             clientSocket.send(packet);
@@ -171,6 +231,7 @@ public class NetworkHelper implements Constants {
 
             MulticastSocket s = new MulticastSocket(PORT);
 
+            if(p.getType() != "HERO_UPDATE")
             System.out.println("[Server] Sending " + p.getType() + " (" + packet.getLength() +"B) to " + address + ":" + port);
 
             s.send(packet);

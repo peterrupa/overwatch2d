@@ -57,6 +57,7 @@ class GameScreen implements Screen, InputProcessor {
     static Stage UIStage;
     static Stage PostStage;
     static Stage selectionStage;
+    static Stage networkStage;
     static OrthographicCamera camera;
     static OrthogonalTiledMapRenderer tiledMapRenderer;
 
@@ -174,6 +175,7 @@ class GameScreen implements Screen, InputProcessor {
         UIStage = new Stage();
         PostStage = new Stage();
         selectionStage = new Stage();
+        networkStage = new Stage();
 
         TiledMap tiledMap = new TmxMapLoader().load("map/sampleMap.tmx");
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
@@ -362,6 +364,7 @@ class GameScreen implements Screen, InputProcessor {
         UIStage.dispose();
         PostStage.dispose();
         selectionStage.dispose();
+        networkStage.dispose();
     }
 
     @Override
@@ -440,84 +443,83 @@ class GameScreen implements Screen, InputProcessor {
             }
         }
 
-        if(gameState.getState() == IN_BATTLE) {
-            if(gameState.getCurrentObjective() == 1) {
-                if(getNumberOfHeroesTeam(gameState.getObjective1Heroes(), 0) > 0 && getNumberOfHeroesTeam(gameState.getObjective1Heroes(), 1) == 0) {
-                    gameState.setObjective1Capture(gameState.getObjective1Capture() + Gdx.graphics.getDeltaTime() * gameState.getObjective1Heroes().size() * Config.CAPPING_MODIFIER);
+        if(gameState.getCurrentObjective() == 1) {
+            if(getNumberOfHeroesTeam(gameState.getObjective1Heroes(), 0) > 0 && getNumberOfHeroesTeam(gameState.getObjective1Heroes(), 1) == 0) {
+                gameState.setObjective1Capture(gameState.getObjective1Capture() + Gdx.graphics.getDeltaTime() * gameState.getObjective1Heroes().size() * Config.CAPPING_MODIFIER);
 
-                    if(gameState.getObjective1Capture() > 100) {
-                        setObjective(2);
+                if(gameState.getObjective1Capture() > 100) {
+                    setObjective(2);
 
-                        announce60RemainingFlag = false;
-                        announce30RemainingFlag = false;
-                        announce10RemainingFlag = false;
+                    announce60RemainingFlag = false;
+                    announce30RemainingFlag = false;
+                    announce10RemainingFlag = false;
 
-                        if(currentPlayer.getTeam() == 0) {
-                            // captured
-                            objectiveCapturedSFX.play();
+                    if(currentPlayer.getTeam() == 0) {
+                        // captured
+                        objectiveCapturedSFX.play();
 
-                            Timer.schedule(new Timer.Task() {
-                                @Override
-                                public void run() {
-                                    captureTheObjectiveSFX.play();
-                                }
-                            }, 1.8f);
-                        }
-                        else {
-                            // lost
-                            objectiveLostSFX.play();
-
-                            Timer.schedule(new Timer.Task() {
-                                @Override
-                                public void run() {
-                                    defendTheObjectiveSFX.play();
-                                }
-                            }, 1.8f);
-                        }
+                        Timer.schedule(new Timer.Task() {
+                            @Override
+                            public void run() {
+                                captureTheObjectiveSFX.play();
+                            }
+                        }, 1.8f);
                     }
-                }
+                    else {
+                        // lost
+                        objectiveLostSFX.play();
 
-                else if(getNumberOfHeroesTeam(gameState.getObjective1Heroes(), 0) > 0 && getNumberOfHeroesTeam(gameState.getObjective1Heroes(), 1) > 0) {
-                    // contested
-                }
-
-                else {
-                    gameState.setObjective1Capture(gameState.getObjective1Capture() - Gdx.graphics.getDeltaTime() / 2 * Config.CAPPING_MODIFIER);
-
-                    if(gameState.getObjective1Capture() < 0) {
-                        gameState.setObjective1Capture(0);
+                        Timer.schedule(new Timer.Task() {
+                            @Override
+                            public void run() {
+                                defendTheObjectiveSFX.play();
+                            }
+                        }, 1.8f);
                     }
                 }
             }
-            else if(gameState.getCurrentObjective() == 2) {
-                if(getNumberOfHeroesTeam(gameState.getObjective2Heroes(), 0) > 0 && getNumberOfHeroesTeam(gameState.getObjective2Heroes(), 1) == 0) {
-                    gameState.setObjective2Capture(gameState.getObjective2Capture() + Gdx.graphics.getDeltaTime() * gameState.getObjective2Heroes().size() * Config.CAPPING_MODIFIER);
 
-                    if(gameState.getObjective2Capture() > 100) {
-                        if(currentPlayer.getTeam() == 0) {
-                            victory();
-                        }
-                        else {
-                            defeat();
-                        }
+            else if(getNumberOfHeroesTeam(gameState.getObjective1Heroes(), 0) > 0 && getNumberOfHeroesTeam(gameState.getObjective1Heroes(), 1) > 0) {
+                // contested
+            }
+
+            else {
+                gameState.setObjective1Capture(gameState.getObjective1Capture() - Gdx.graphics.getDeltaTime() / 2 * Config.CAPPING_MODIFIER);
+
+                if(gameState.getObjective1Capture() < 0) {
+                    gameState.setObjective1Capture(0);
+                }
+            }
+        }
+        else if(gameState.getCurrentObjective() == 2) {
+            if(getNumberOfHeroesTeam(gameState.getObjective2Heroes(), 0) > 0 && getNumberOfHeroesTeam(gameState.getObjective2Heroes(), 1) == 0) {
+                gameState.setObjective2Capture(gameState.getObjective2Capture() + Gdx.graphics.getDeltaTime() * gameState.getObjective2Heroes().size() * Config.CAPPING_MODIFIER);
+
+                if(gameState.getObjective2Capture() > 100) {
+                    gameState.setObjective2Capture(100);
+                    if(currentPlayer.getTeam() == 0) {
+                        victory();
+                    }
+                    else {
+                        defeat();
                     }
                 }
+            }
 
-                else if(getNumberOfHeroesTeam(gameState.getObjective2Heroes(), 0) > 0 && getNumberOfHeroesTeam(gameState.getObjective2Heroes(), 1) > 0) {
-                    // contested
-                }
+            else if(getNumberOfHeroesTeam(gameState.getObjective2Heroes(), 0) > 0 && getNumberOfHeroesTeam(gameState.getObjective2Heroes(), 1) > 0) {
+                // contested
+            }
 
-                else {
-                    gameState.setObjective2Capture(gameState.getObjective2Capture() - Gdx.graphics.getDeltaTime() / 2 * Config.CAPPING_MODIFIER);
+            else {
+                gameState.setObjective2Capture(gameState.getObjective2Capture() - Gdx.graphics.getDeltaTime() / 2 * Config.CAPPING_MODIFIER);
 
-                    if(gameState.getObjective2Capture() < 0) {
-                        gameState.setObjective2Capture(0);
-                    }
+                if(gameState.getObjective2Capture() < 0) {
+                    gameState.setObjective2Capture(0);
                 }
             }
         }
 
-        if(gameState.isBattleHasStarted() && gameState.getState() == IN_BATTLE) {
+        if(gameState.isBattleHasStarted()) {
             gameState.setGameTimer(gameState.getGameTimer() - Gdx.graphics.getDeltaTime());
 
             int time = (int)Math.ceil(gameState.getGameTimer());
@@ -573,10 +575,11 @@ class GameScreen implements Screen, InputProcessor {
             ammoCountLabel.setText(playerHero.getCurrentAmmo() + "/" + playerHero.getMaxAmmo());
         }
 
-        if(LeftMouseHold && !playerHero.isDead()) {
+        if(LeftMouseHold && playerHero != null && !playerHero.isDead()) {
             Vector3 hoverCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
             Vector3 position = GameScreen.camera.unproject(hoverCoordinates);
             playerHero.firePrimary(position.x, position.y);
+            NetworkHelper.clientSend(new Packet("HERO_FIRE_PRIMARY", new HeroFirePrimary(currentPlayer.getName(), position.x, position.y)), NetworkHelper.getHost());
         }
         else {
             LeftMouseHold = false;
@@ -627,9 +630,14 @@ class GameScreen implements Screen, InputProcessor {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         if(gameState.getState() == HERO_SELECTION) {
-            // kunwari base
-            camera.position.x = 1100;
-            camera.position.y = 1100;
+            if(currentPlayer.getTeam() == 0) {
+                camera.position.x = GameState.getAttackersSpawnX();
+                camera.position.y = GameState.getAttackersSpawnY();
+            }
+            else {
+                camera.position.x = GameState.getDefendersSpawnX();
+                camera.position.y = GameState.getDefendersSpawnY();
+            }
         }
         else if(gameState.getState() == IN_BATTLE || gameState.getState() == POST_GAME) {
             Vector3 mouseCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
@@ -657,6 +665,12 @@ class GameScreen implements Screen, InputProcessor {
 
         renderObjective(1);
         renderObjective(2);
+
+        networkStage.getBatch().begin();
+
+        Overwatch2D.gameInformationFont.draw(networkStage.getBatch(), "FPS:" + Gdx.graphics.getFramesPerSecond(), 10, Gdx.graphics.getHeight() - 15);
+
+        networkStage.getBatch().end();
 
         stage.draw();
         stage.getBatch().begin();
@@ -723,6 +737,18 @@ class GameScreen implements Screen, InputProcessor {
         debugRenderer.render(gameState.getWorld(), debugMatrix);
 
         mouseMoved(Gdx.input.getX(), Gdx.input.getY());
+
+        if(playerHero != null) {
+            String name = currentPlayer.getName();
+            float x = playerHero.getBody().getWorldCenter().x;
+            float y = playerHero.getBody().getWorldCenter().y;
+            float angle = playerHero.getBody().getAngle();
+            int currentHP = playerHero.getCurrentHealth();
+            boolean isDead = playerHero.isDead();
+            float timeToRespawn = playerHero.getTimeToRespawn();
+
+            NetworkHelper.clientSend(new Packet("HERO_UPDATE", new HeroUpdatePacket(name, x, y, angle, currentHP, isDead, timeToRespawn)), NetworkHelper.getHost());
+        }
     }
 
     @Override
@@ -837,6 +863,8 @@ class GameScreen implements Screen, InputProcessor {
     @Override
     public void pause() {
         Gdx.input.setCursorCatched(false);
+
+        Gdx.app.getApplicationListener().resume();
 
         isAltTabbed = true;
     }
@@ -1327,6 +1355,8 @@ class GameScreen implements Screen, InputProcessor {
 
         Hero h = new Hero(spawnX, spawnY, player);
 
+        player.setHero(h);
+
         spawnHero(h);
 
         if(playername.equals(currentPlayer.getName())) {
@@ -1335,6 +1365,26 @@ class GameScreen implements Screen, InputProcessor {
             currentPlayer.setHero(h);
 
             playerHero.playSelectedSound();
+        }
+    }
+
+    public static void updateHero(String name, float x, float y, float angle, int currentHP, boolean isDead, float timeToRespawn) {
+        Hero h = gameState.getPlayers().stream().filter(p -> p.getName().equals(name)).collect(Collectors.toList()).get(0).getHero();
+
+        if(h != null) {
+            h.getBody().setTransform(x, y, angle);
+
+            h.setCurrentHP(currentHP);
+            h.setIsDead(isDead);
+            h.setTimeToRespawn(timeToRespawn);
+        }
+    }
+
+    public static void firePrimary(String name, float x, float y) {
+        Hero h = gameState.getPlayers().stream().filter(p -> p.getName().equals(name)).collect(Collectors.toList()).get(0).getHero();
+
+        if(h != null) {
+            h.firePrimary(x, y);
         }
     }
 }

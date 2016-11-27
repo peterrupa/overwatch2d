@@ -22,10 +22,11 @@ public class Overwatch2D extends Game {
     static BitmapFont gameSelectionCountdownFont;
     static BitmapFont gamePostgamefont;
     static BitmapFont gameTeamLabelsFont;
+    static BitmapFont gameInformationFont;
     static ShapeRenderer shapeRenderer;
     static Thread clientReceiver;
     static Thread serverReceiver;
-    private static String name = Math.random() + "";
+    private static String name = (int)Math.floor(Math.random() * 100) + "";
 
     private static GameServer server;
 
@@ -44,13 +45,21 @@ public class Overwatch2D extends Game {
         gameSelectionCountdownFont = createFont("fonts/bignoodletoo.ttf", 24);
         gamePostgamefont = createFont("fonts/bignoodletoo.ttf", 150);
         gameTeamLabelsFont = createFont("fonts/bignoodletoo.ttf", 60);
+        gameInformationFont = createFont("fonts/koverwatch.ttf", 15);
         shapeRenderer = new ShapeRenderer();
 
         this.setScreen(new MainMenu(this));
     }
 
     public void render() {
-        super.render();
+        try {
+            super.render();
+        }
+        catch(Exception e) {
+            System.out.println(e);
+            System.out.println(e.getMessage());
+            Gdx.app.exit();
+        }
     }
 
     private BitmapFont createFont(String filename, int size) {
