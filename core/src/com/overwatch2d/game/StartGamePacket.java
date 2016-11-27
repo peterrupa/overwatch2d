@@ -1,7 +1,9 @@
 package com.overwatch2d.game;
 
-public class StartGamePacket extends Packet {
+import java.io.Serializable;
+
+public class StartGamePacket implements Serializable {
     public StartGamePacket() {
-        super("START_GAME");
+
     }
 }

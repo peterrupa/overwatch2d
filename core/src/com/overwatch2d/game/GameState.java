@@ -2,9 +2,10 @@ package com.overwatch2d.game;
 
 import com.badlogic.gdx.physics.box2d.*;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class GameState {
+public class GameState implements Serializable {
     public static final float ATTACKERS_SPAWN_X = 100;
     public static final float ATTACKERS_SPAWN_Y = 100;
     public static final float DEFENDERS_SPAWN_X = 1000;

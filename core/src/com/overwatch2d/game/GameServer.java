@@ -1,5 +1,7 @@
 package com.overwatch2d.game;
 
+import com.badlogic.gdx.utils.Json;
+
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.DatagramPacket;
@@ -11,6 +13,8 @@ import java.util.Iterator;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import static java.lang.Thread.sleep;
+
 /**
  * Created by geeca on 11/16/16.
  */
@@ -21,17 +25,10 @@ public class GameServer implements Constants {
      * for broadcasting data to all players
      *************************************/
     public GameServer() {
-        try {
-            HostScreen.setPlayers(players);
-        }
-        catch(Exception e) {
-
-        }
+        System.out.println("Game server started");
     }
 
     public void broadcast(Packet packet) {
-        System.out.println("Server broadcasting");
-
         for(Player p: players) {
             send(p, packet);
         }
@@ -43,17 +40,17 @@ public class GameServer implements Constants {
 
     public void send(Player player, Packet packet) {
         try {
-            NetworkHelper.serverSend(packet, player.getAddress());
+            NetworkHelper.serverSend(packet, player.getAddress(), player.getPort());
         }
         catch(Exception e) {}
     }
 
-    public void connectPlayer(String name, InetAddress address) {
-        players.add(new Player(name, address));
+    public void connectPlayer(String name, InetAddress address, int port) {
+        players.add(new Player(name, address, port));
 
-        System.out.println(name + " " + address + " joined");
+        System.out.println(name + " " + address + ":" + port + " joined");
 
-        broadcast(new PlayerListPacket(players));
+        broadcast(new Packet("PLAYER_LIST", new PlayerListPacket(players)));
 
         HostScreen.setPlayers(players);
     }
@@ -62,13 +59,16 @@ public class GameServer implements Constants {
         Player changer = players.stream().filter(p -> p.getName().equals(name)).collect(Collectors.toList()).get(0);
 
         changer.setTeam(team);
-
-        broadcast(new PlayerListPacket(players));
+        broadcast(new Packet("CHANGE_TEAM", new ChangeTeamPacket(name, team)));
 
         HostScreen.setPlayers(players);
     }
 
     public void startGame() {
-        broadcast(new StartGamePacket());
+        broadcast(new Packet("START_GAME", new StartGamePacket()));
+    }
+
+    public void spawnHero(String name) {
+        broadcast(new Packet("HERO_SPAWN", new HeroSpawnPacket(name)));
     }
 }

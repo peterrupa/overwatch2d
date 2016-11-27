@@ -14,11 +14,16 @@ public class Player implements Serializable {
     private String name;
     private Hero hero = null;
     private int team = 0;
+    private int port;
+
     //constructor
-    public Player(String name, InetAddress address){
+    public Player(String name, InetAddress address, int port){
         this.name = name;
         this.address = address;
+        this.port = port;
     }
+
+    public Player() {}
 
     public InetAddress getAddress(){
         return address;
@@ -56,4 +61,7 @@ public class Player implements Serializable {
     }
 
 
+    public int getPort() {
+        return port;
+    }
 }

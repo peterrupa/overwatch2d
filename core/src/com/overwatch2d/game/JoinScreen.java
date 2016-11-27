@@ -115,6 +115,14 @@ public class JoinScreen implements Screen{
         updateTeamsUI();
     }
 
+    public static void changeTeam(String playername, int team) {
+        Player changer = players.stream().filter(p -> p.getName().equals(playername)).collect(Collectors.toList()).get(0);
+
+        changer.setTeam(team);
+
+        updateTeamsUI();
+    }
+
     private static Label createPlayerLabel(String text) {
         Label.LabelStyle style = new Label.LabelStyle();
         style.font = Overwatch2D.gameUIFlashFont;
@@ -137,7 +145,7 @@ public class JoinScreen implements Screen{
         attackersTextButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y) {
-                NetworkHelper.clientSend(new ChangeTeamPacket(Overwatch2D.getName(), 0), NetworkHelper.getHost());
+                NetworkHelper.clientSend(new Packet("CHANGE_TEAM", new ChangeTeamPacket(Overwatch2D.getName(), 0)), NetworkHelper.getHost());
             }
 
             @Override
@@ -158,7 +166,7 @@ public class JoinScreen implements Screen{
         defendersTextButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y) {
-                NetworkHelper.clientSend(new ChangeTeamPacket(Overwatch2D.getName(), 1), NetworkHelper.getHost());
+                NetworkHelper.clientSend(new Packet("CHANGE_TEAM", new ChangeTeamPacket(Overwatch2D.getName(), 1)), NetworkHelper.getHost());
             }
 
             @Override

@@ -21,14 +21,14 @@ import java.io.Serializable;
 class Hero extends Actor implements Serializable {
     private final float RESPAWN_TIMER = 5f;
 
-    private Texture texture = new Texture(Gdx.files.internal("sprites/actor.png"));
+    private static Texture texture = new Texture(Gdx.files.internal("sprites/actor.png"));
     private Body physicsBody;
     private float speed = 4f;
     private float projectileSpawnDistance = 0.30f;
     private float projectileXOffset = 0.25f;
     private int MAX_HEALTH;
     private int currentHP;
-    private Texture portrait = new Texture(Gdx.files.internal("portraits/soldier76.png"));
+    private static Texture portrait = new Texture(Gdx.files.internal("portraits/soldier76.png"));
     private Player player;
 
     private static Sound fireSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/fire.ogg"));

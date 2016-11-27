@@ -64,8 +64,8 @@ public class Overwatch2D extends Game {
     }
 
     public static void createServer() {
-        server = new GameServer();
         NetworkHelper.createServerReceiver().start();
+        server = new GameServer();
     }
 
     public static void createClient() {

@@ -30,15 +30,16 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import static com.overwatch2d.game.GameScreen.flashObjective;
 
 class GameScreen implements Screen, InputProcessor {
-    private Overwatch2D game = null;
+    private static Overwatch2D game = null;
 
-    private final int HERO_SELECTION = 0;
-    private final int IN_BATTLE = 1;
-    private final int POST_GAME = 2;
+    private static final int HERO_SELECTION = 0;
+    private static final int IN_BATTLE = 1;
+    private static final int POST_GAME = 2;
 
     private final float objective1x1 = 600;
     private final float objective1y1 = 1200;
@@ -59,7 +60,7 @@ class GameScreen implements Screen, InputProcessor {
     static OrthographicCamera camera;
     static OrthogonalTiledMapRenderer tiledMapRenderer;
 
-    private Hero playerHero;
+    private static Hero playerHero;
     private Cursor cursor;
 
     private static boolean WHold = false;
@@ -80,7 +81,7 @@ class GameScreen implements Screen, InputProcessor {
     private Label healthLabel;
     private Label ammoCountLabel;
     private Label gunNameLabel;
-    private Label countdownLabel;
+    private static Label countdownLabel;
     private static Label flashLabel;
     private Label victoryLabel;
     private Label defeatLabel;
@@ -89,10 +90,10 @@ class GameScreen implements Screen, InputProcessor {
 
     private static float objectiveFlashTTL;
 
-    private Texture heroPortraitTexture;
-    private Sprite heroPortraitSprite;
+    private static Texture heroPortraitTexture;
+    private static Sprite heroPortraitSprite;
 
-    private TextButton okButton;
+    private static TextButton okButton;
 
     private InputMultiplexer inputs;
 
@@ -776,7 +777,7 @@ class GameScreen implements Screen, InputProcessor {
         return false;
     }
 
-    private void setState(int state) {
+    private static void setState(int state) {
         gameState.setState(state);
 
         if(state == IN_BATTLE) {
@@ -918,7 +919,7 @@ class GameScreen implements Screen, InputProcessor {
         return false;
     }
 
-    private void initSelectionStage() {
+    private static void initSelectionStage() {
         TextButton.TextButtonStyle okStyle = new TextButton.TextButtonStyle();
         okStyle.font = game.gameSelectionOKFont;
 
@@ -931,26 +932,7 @@ class GameScreen implements Screen, InputProcessor {
             @Override
             public void clicked(InputEvent e, float x, float y) {
                 if(gameState.getState() == HERO_SELECTION) {
-                    setState(IN_BATTLE);
-
-                    float spawnX, spawnY;
-
-                    if(currentPlayer.getTeam() == 0) {
-                        spawnX = gameState.getAttackersSpawnX();
-                        spawnY = gameState.getAttackersSpawnY();
-                    }
-                    else {
-                        spawnX = gameState.getDefendersSpawnX();
-                        spawnY = gameState.getDefendersSpawnY();
-                    }
-
-                    Hero h = new Hero(spawnX, spawnY, currentPlayer);
-
-                    spawnHero(h);
-
-                    currentPlayer.setHero(h);
-
-                    playerHero.playSelectedSound();
+                    NetworkHelper.clientSend(new Packet("HERO_SPAWN", new HeroSpawnPacket(Overwatch2D.getName())), NetworkHelper.getHost());
                 }
             }
         });
@@ -976,7 +958,7 @@ class GameScreen implements Screen, InputProcessor {
         selectionStage.addActor(countdownLabel);
     }
 
-    private void spawnHero(Hero e) {
+    private static void spawnHero(Hero e) {
         if(e.getPlayerName() == currentPlayer.getName()) {
             playerHero = e;
 
@@ -1047,7 +1029,7 @@ class GameScreen implements Screen, InputProcessor {
         UIStage.addActor(objectiveLabel);
     }
 
-    private void initPortrait() {
+    private static void initPortrait() {
         heroPortraitTexture = playerHero.getPortraitTexture();
         heroPortraitSprite = new Sprite(heroPortraitTexture);
         heroPortraitSprite.setPosition(100 - heroPortraitSprite.getWidth()/2, 90 - heroPortraitSprite.getHeight()/2);
@@ -1327,5 +1309,32 @@ class GameScreen implements Screen, InputProcessor {
 
     public static GameState getGameState() {
         return gameState;
+    }
+
+    public static void spawnPlayer(String playername) {
+        float spawnX, spawnY;
+
+        Player player = gameState.getPlayers().stream().filter(p -> p.getName().equals(playername)).collect(Collectors.toList()).get(0);
+
+        if(player.getTeam() == 0) {
+            spawnX = gameState.getAttackersSpawnX();
+            spawnY = gameState.getAttackersSpawnY();
+        }
+        else {
+            spawnX = gameState.getDefendersSpawnX();
+            spawnY = gameState.getDefendersSpawnY();
+        }
+
+        Hero h = new Hero(spawnX, spawnY, player);
+
+        spawnHero(h);
+
+        if(playername.equals(currentPlayer.getName())) {
+            setState(IN_BATTLE);
+
+            currentPlayer.setHero(h);
+
+            playerHero.playSelectedSound();
+        }
     }
 }

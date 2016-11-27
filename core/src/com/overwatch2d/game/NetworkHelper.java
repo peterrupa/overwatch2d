@@ -7,36 +7,41 @@ import java.util.ArrayList;
 
 public class NetworkHelper implements Constants {
     private static InetAddress host;
+    private static MulticastSocket clientSocket = null;
+    private static boolean isServer = false;
+
+    static {
+        try {
+            int port = 1000 + (int)Math.floor(Math.random() * 7000);
+
+            clientSocket = new MulticastSocket(port);
+
+            System.out.println("Client socket initialized at :" + clientSocket.getLocalPort());
+        }
+        catch(Exception e) {
+            System.out.println(e);
+        }
+    }
 
     public static void connect(String host, String name) {
         try {
-            System.out.println("Sending CONNECT to " + host);
-
             InetAddress hostAddress = InetAddress.getByName(host);
 
             NetworkHelper.host = hostAddress;
 
-            NetworkHelper.clientSend(new ConnectPacket(name), hostAddress);
+            NetworkHelper.clientSend(new Packet("CONNECT", new ConnectPacket(name)), hostAddress);
         }
         catch(Exception e) {}
     }
 
     public static Thread createClientReceiver() {
         Thread t = new Thread(() -> {
-            System.out.println("Client receiver started");
-
             while(true) {
                 try {
-                    byte[] bytes = new byte[2048];
+                    byte[] bytes = new byte[1024];
                     DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
 
-                    System.out.println("Client waiting to receive.");
-
-                    MulticastSocket s = new MulticastSocket(CLIENT_PORT);
-
-                    s.receive(packet);
-
-                    s.close();
+                    clientSocket.receive(packet);
 
                     Object rawData = Serialize.toObject(packet.getData());
 
@@ -48,16 +53,37 @@ public class NetworkHelper implements Constants {
                     System.out.println("[Client] Received " + receivedPacket.getType() + " from " + address.toString() + ":" + port);
 
                     switch(receivedPacket.getType()) {
-                        case "PLAYER_LIST":
-                            ArrayList<Player> players = ((PlayerListPacket)receivedPacket).getPlayers();
+                        case "PLAYER_LIST": {
+                            ArrayList<Player> players = ((PlayerListPacket)receivedPacket.getPayload()).getPlayers();
 
                             JoinScreen.setPlayers(players);
 
                             break;
-                        case "START_GAME":
-                            new Thread(() -> Gdx.app.postRunnable(() -> JoinScreen.startGame())).start();
+                        }
+                        case "START_GAME": {
+                            if(isServer) {
+                                new Thread(() -> Gdx.app.postRunnable(() -> HostScreen.startGame())).start();
+                            }
+                            else {
+                                new Thread(() -> Gdx.app.postRunnable(() -> JoinScreen.startGame())).start();
+                            }
 
                             break;
+                        }
+                        case "HERO_SPAWN": {
+                            String playername = ((HeroSpawnPacket)receivedPacket.getPayload()).getPlayername();
+
+                            Gdx.app.postRunnable(() -> GameScreen.spawnPlayer(playername));
+
+                            break;
+                        }
+                        case "CHANGE_TEAM": {
+                            String name = ((ChangeTeamPacket)receivedPacket.getPayload()).getName();
+                            int team = ((ChangeTeamPacket)receivedPacket.getPayload()).getTeam();
+
+                            JoinScreen.changeTeam(name, team);
+                            break;
+                        }
                     }
                 } catch (Exception ioe) {
                     System.out.println("Client Error:");
@@ -71,14 +97,12 @@ public class NetworkHelper implements Constants {
 
     public static Thread createServerReceiver() {
         Thread t = new Thread(() -> {
-            System.out.println("Server receiver started");
+            isServer = true;
 
             while(true) {
                 try {
-                    byte[] bytes = new byte[256];
+                    byte[] bytes = new byte[1024];
                     DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
-
-                    System.out.println("Server waiting for request!");
 
                     MulticastSocket s = new MulticastSocket(PORT);
 
@@ -97,16 +121,21 @@ public class NetworkHelper implements Constants {
 
                     switch(receivedPacket.getType()) {
                         case "CONNECT": {
-                            String name = ((ConnectPacket)receivedPacket).getName();
+                            String name = ((ConnectPacket)receivedPacket.getPayload()).getName();
 
-                            Overwatch2D.getServer().connectPlayer(name, address);
+                            Overwatch2D.getServer().connectPlayer(name, address, port);
                             break;
                         }
                         case "CHANGE_TEAM": {
-                            String name = ((ChangeTeamPacket)receivedPacket).getName();
-                            int team = ((ChangeTeamPacket)receivedPacket).getTeam();
+                            String name = ((ChangeTeamPacket)receivedPacket.getPayload()).getName();
+                            int team = ((ChangeTeamPacket)receivedPacket.getPayload()).getTeam();
 
                             Overwatch2D.getServer().changeTeam(name, team);
+                        }
+                        case "HERO_SPAWN": {
+                            String name = ((HeroSpawnPacket)receivedPacket.getPayload()).getPlayername();
+
+                            Overwatch2D.getServer().spawnHero(name);
                         }
                     }
                 } catch (Exception ioe) {
@@ -125,30 +154,28 @@ public class NetworkHelper implements Constants {
             byte buf[] = Serialize.toBytes(p);
             packet = new DatagramPacket(buf, buf.length, address, PORT);
 
-            MulticastSocket s = new MulticastSocket(CLIENT_PORT);
+            System.out.println("[Client] Sending " + p.getType() + " (" + packet.getLength() +"B) to " + address);
 
-            s.send(packet);
-
-            s.close();
+            clientSocket.send(packet);
         } catch (Exception ioe) {
             ioe.printStackTrace();
         }
     }
 
-    public static void serverSend(Packet p, InetAddress address) {
+    public static void serverSend(Packet p, InetAddress address, int port) {
         try {
             DatagramPacket packet;
             byte buf[] = Serialize.toBytes(p);
 
-            packet = new DatagramPacket(buf, buf.length, address, CLIENT_PORT);
+            packet = new DatagramPacket(buf, buf.length, address, port);
 
             MulticastSocket s = new MulticastSocket(PORT);
+
+            System.out.println("[Server] Sending " + p.getType() + " (" + packet.getLength() +"B) to " + address + ":" + port);
 
             s.send(packet);
 
             s.close();
-
-            System.out.println("Server sent to " + address.toString() + ":" + CLIENT_PORT);
         } catch (Exception ioe) {
             ioe.printStackTrace();
         }

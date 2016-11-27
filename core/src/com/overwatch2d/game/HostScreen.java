@@ -30,6 +30,7 @@ public class HostScreen implements Screen{
 
     HostScreen(final Overwatch2D gam) {
         Overwatch2D.createServer();
+        Overwatch2D.createClient();
         NetworkHelper.connect("localhost", Overwatch2D.getName());
 
         float w = Gdx.graphics.getWidth(),
@@ -75,12 +76,9 @@ public class HostScreen implements Screen{
         stage.addActor(beginGradient);
 
         beginGradient.addListener(new ClickListener() {
-
             @Override
             public void clicked(InputEvent e, float x, float y) {
-                startGame();
-
-                dispose();
+                Overwatch2D.getServer().startGame();
             }
 
             @Override
@@ -147,11 +145,7 @@ public class HostScreen implements Screen{
     }
 
     public static void startGame() {
-        System.out.println(players);
-
         game.setScreen(new GameScreen(game, players, Overwatch2D.getName()));
-
-        Overwatch2D.getServer().startGame();
     }
 
     private static Label createPlayerLabel(String text) {
@@ -176,7 +170,7 @@ public class HostScreen implements Screen{
         attackersTextButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y) {
-                NetworkHelper.clientSend(new ChangeTeamPacket(Overwatch2D.getName(), 0), NetworkHelper.getHost());
+                NetworkHelper.clientSend(new Packet("CHANGE_TEAM", new ChangeTeamPacket(Overwatch2D.getName(), 0)), NetworkHelper.getHost());
             }
 
             @Override
@@ -197,7 +191,7 @@ public class HostScreen implements Screen{
         defendersTextButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y) {
-                NetworkHelper.clientSend(new ChangeTeamPacket(Overwatch2D.getName(), 1), NetworkHelper.getHost());
+                NetworkHelper.clientSend(new Packet("CHANGE_TEAM", new ChangeTeamPacket(Overwatch2D.getName(), 1)), NetworkHelper.getHost());
             }
 
             @Override
