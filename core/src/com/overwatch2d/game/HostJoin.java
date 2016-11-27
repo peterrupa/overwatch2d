@@ -66,16 +66,7 @@ public class HostJoin implements Screen, InputProcessor {
         tutorialGradient.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y) {
-//                // temporary, hardcode players
-//                ArrayList<Player> p = new ArrayList<Player>();
-//
-//                try {
-//                    p.add(new Player("Peter", InetAddress.getByName("127.0.0.1"), 4545));
-//                } catch (UnknownHostException e1) {
-//                    e1.printStackTrace();
-//                }
-//
-//                game.setScreen(new GameScreen(game, p));
+                Gdx.app.exit();
                 dispose();
             }
 
@@ -139,7 +130,8 @@ public class HostJoin implements Screen, InputProcessor {
         jgameGradient.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y) {
-                Gdx.app.exit();
+                game.setScreen(new JoinGameScreen(game));
+                dispose();
             }
 
             @Override

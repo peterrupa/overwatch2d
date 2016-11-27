@@ -1,12 +1,16 @@
 package com.overwatch2d.game;
 
-public class ConnectPacket extends Packet{
+import java.io.Serializable;
+
+public class ConnectPacket implements Serializable {
     private String name;
 
     public ConnectPacket(String name) {
-        super("CONNECT");
-
         this.name = name;
+    }
+
+    public ConnectPacket() {
+
     }
 
     public String getName() {

@@ -30,45 +30,39 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import static com.overwatch2d.game.GameScreen.flashObjective;
 
 class GameScreen implements Screen, InputProcessor {
-    private final Overwatch2D game;
+    private static Overwatch2D game = null;
 
-    public static final float ATTACKERS_SPAWN_X = 100;
-    public static final float ATTACKERS_SPAWN_Y = 100;
-    public static final float DEFENDERS_SPAWN_X = 1000;
-    public static final float DEFENDERS_SPAWN_Y = 1000;
+    private static final int HERO_SELECTION = 0;
+    private static final int IN_BATTLE = 1;
+    private static final int POST_GAME = 2;
 
-    private final float HERO_SELECTION_DURATION = 20f;
-    private final float GAME_PREPARATION_DURATION = 60f + HERO_SELECTION_DURATION;
-    private final float BATTLE_DURATION = 65f;
+    private final float objective1x1 = 600;
+    private final float objective1y1 = 1200;
+    private final float objective1x2 = 1000;
+    private final float objective1y2 = 1400;
+
+    private final float objective2x1 = 1200;
+    private final float objective2y1 = 600;
+    private final float objective2x2 = 1400;
+    private final float objective2y2 = 800;
+
     private static final float NOTIFICATION_DURATION = 3f;
-
-    private final int HERO_SELECTION = 0;
-    private final int IN_BATTLE = 1;
-    private final int POST_GAME = 2;
-
-    private int state;
-
-    private boolean heroSelectionFinished = false;
 
     static Stage stage;
     static Stage UIStage;
     static Stage PostStage;
     static Stage selectionStage;
+    static Stage networkStage;
     static OrthographicCamera camera;
     static OrthogonalTiledMapRenderer tiledMapRenderer;
 
-    static ArrayList<Hero> heroes = new ArrayList<Hero>();
-    static ArrayList<Hero> heroesDestroyed = new ArrayList<Hero>();
-    static ArrayList<Projectile> projectiles = new ArrayList<Projectile>();
-    static ArrayList<Projectile> projectilesDestroyed = new ArrayList<Projectile>();
-    private Hero playerHero;
+    private static Hero playerHero;
     private Cursor cursor;
-
-    static World world;
 
     private static boolean WHold = false;
     private static boolean AHold = false;
@@ -88,7 +82,7 @@ class GameScreen implements Screen, InputProcessor {
     private Label healthLabel;
     private Label ammoCountLabel;
     private Label gunNameLabel;
-    private Label countdownLabel;
+    private static Label countdownLabel;
     private static Label flashLabel;
     private Label victoryLabel;
     private Label defeatLabel;
@@ -99,36 +93,16 @@ class GameScreen implements Screen, InputProcessor {
 
     private static float objectiveFlashTTL;
 
-    private Texture heroPortraitTexture;
-    private Sprite heroPortraitSprite;
+    private static Texture heroPortraitTexture;
+    private static Sprite heroPortraitSprite;
 
-    private TextButton okButton;
+    private static TextButton okButton;
 
     private InputMultiplexer inputs;
 
-    private float countdown;
-
-    private static ArrayList<Player> players = new ArrayList<Player>();
     private static Player currentPlayer;
 
-    private int currentObjective;
-    private float objective1Capture = 0f;
-    private ArrayList<Hero> objective1Heroes = new ArrayList<Hero>();
-    private final float objective1x1 = 600;
-    private final float objective1y1 = 1200;
-    private final float objective1x2 = 1000;
-    private final float objective1y2 = 1400;
-
-    private float objective2Capture = 0f;
-    private ArrayList<Hero> objective2Heroes = new ArrayList<Hero>();
-    private final float objective2x1 = 1200;
-    private final float objective2y1 = 600;
-    private final float objective2x2 = 1400;
-    private final float objective2y2 = 800;
-
     private static final float OBJECTIVE_FLASH_TIME = 7f;
-
-    private boolean slowmo = false;
 
     private final Sound victoryAnnouncerSFX = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/victory.mp3"));
     private final Sound defeatAnnouncerSFX = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/defeat.mp3"));
@@ -168,25 +142,20 @@ class GameScreen implements Screen, InputProcessor {
     private final Sound announce10Remaining = Gdx.audio.newSound(Gdx.files.internal("sfx/announcer/10_remaining.mp3"));
     private boolean announce10RemainingFlag = false;
 
-
-    private float preparationDuration = GAME_PREPARATION_DURATION;
-    private boolean battleHasStarted = false;
-
-    private float gameTimer = 1;
-
     private static float flashNotificationTTL = 0;
     private static String flashNotificationMessage = "";
 
     private boolean isAltTabbed = false;
 
-    GameScreen(final Overwatch2D gam, ArrayList<Player> players) {
+    private static GameState gameState;
+
+    GameScreen(final Overwatch2D gam, ArrayList<Player> players, String name) {
         game = gam;
-        this.countdown = HERO_SELECTION_DURATION;
-        this.players = players;
+        GameScreen.gameState = new GameState(players);
 
         try {
             for(Player p: players) {
-                if(p.getAddress().equals(InetAddress.getByName("192.168.0.1"))) {
+                if(p.getName().equals(name)) {
                     currentPlayer = p;
 
                     break;
@@ -208,16 +177,13 @@ class GameScreen implements Screen, InputProcessor {
         UIStage = new Stage();
         PostStage = new Stage();
         selectionStage = new Stage();
+        networkStage = new Stage();
 
         TiledMap tiledMap = new TmxMapLoader().load("map/sampleMap.tmx");
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
 
         // create physics world
-        world = new World(new Vector2(0, 0), true);
-
-        heroes.add(new Hero(200, 500, players.get(1)));
-        heroes.add(new Hero(1100, 1100, players.get(2)));
-        heroes.add(new Hero(1200, 1100, players.get(3)));
+        gameState.setWorld(new World(new Vector2(0, 0), true));
 
         debugRenderer = new Box2DDebugRenderer();
 
@@ -228,7 +194,7 @@ class GameScreen implements Screen, InputProcessor {
 
         stage.addActor(cursor);
 
-        world.setContactListener(new ContactListener() {
+        gameState.getWorld().setContactListener(new ContactListener() {
             @Override
             public void beginContact(Contact contact) {
                 if((contact.getFixtureA().getBody().getUserData() instanceof Integer &&
@@ -237,7 +203,7 @@ class GameScreen implements Screen, InputProcessor {
                    (contact.getFixtureB().getBody().getUserData() instanceof Integer &&
                    contact.getFixtureA().getBody().getUserData() instanceof Hero &&
                    (Integer)contact.getFixtureB().getBody().getUserData() == 1) &&
-                    currentObjective == 1) {
+                    gameState.getCurrentObjective() == 1) {
 
                     Hero h;
 
@@ -248,7 +214,7 @@ class GameScreen implements Screen, InputProcessor {
                         h = (Hero) contact.getFixtureB().getBody().getUserData();
                     }
 
-                    objective1Heroes.add(h);
+                    gameState.getObjective1Heroes().add(h);
                 }
 
                 if((contact.getFixtureA().getBody().getUserData() instanceof Integer &&
@@ -257,7 +223,7 @@ class GameScreen implements Screen, InputProcessor {
                   (contact.getFixtureB().getBody().getUserData() instanceof Integer &&
                    contact.getFixtureA().getBody().getUserData() instanceof Hero &&
                   (Integer)contact.getFixtureB().getBody().getUserData() == 2) &&
-                    currentObjective == 2) {
+                    gameState.getCurrentObjective() == 2) {
 
                     Hero h;
 
@@ -268,7 +234,7 @@ class GameScreen implements Screen, InputProcessor {
                         h = (Hero) contact.getFixtureB().getBody().getUserData();
                     }
 
-                    objective2Heroes.add(h);
+                    gameState.getObjective2Heroes().add(h);
                 }
 
                 if((contact.getFixtureA().getBody().getUserData() instanceof Projectile &&
@@ -288,7 +254,7 @@ class GameScreen implements Screen, InputProcessor {
                         hitHero = (Hero) contact.getFixtureA().getBody().getUserData();
                     }
 
-                    if(projectilesDestroyed.indexOf(projectile) < 0 && !hitHero.isDead()) {
+                    if(gameState.getProjectilesDestroyed().indexOf(projectile) < 0 && !hitHero.isDead()) {
                         projectile.hit(hitHero);
                         hitSound.play();
 
@@ -310,7 +276,7 @@ class GameScreen implements Screen, InputProcessor {
                    (contact.getFixtureB().getBody().getUserData() instanceof Integer &&
                     contact.getFixtureA().getBody().getUserData() instanceof Hero &&
                    (Integer)contact.getFixtureB().getBody().getUserData() == 1) &&
-                    currentObjective == 1) {
+                    gameState.getCurrentObjective() == 1) {
 
                     Hero h;
 
@@ -321,7 +287,7 @@ class GameScreen implements Screen, InputProcessor {
                         h = (Hero) contact.getFixtureB().getBody().getUserData();
                     }
 
-                    objective1Heroes.remove(h);
+                    gameState.getObjective1Heroes().remove(h);
                 }
 
                 if((contact.getFixtureA().getBody().getUserData() instanceof Integer &&
@@ -330,7 +296,7 @@ class GameScreen implements Screen, InputProcessor {
                    (contact.getFixtureB().getBody().getUserData() instanceof Integer &&
                     contact.getFixtureA().getBody().getUserData() instanceof Hero &&
                    (Integer)contact.getFixtureB().getBody().getUserData() == 2) &&
-                    currentObjective == 2) {
+                    gameState.getCurrentObjective() == 2) {
 
                     Hero h;
 
@@ -341,7 +307,7 @@ class GameScreen implements Screen, InputProcessor {
                         h = (Hero) contact.getFixtureB().getBody().getUserData();
                     }
 
-                    objective2Heroes.remove(h);
+                    gameState.getObjective2Heroes().remove(h);
                 }
             }
 
@@ -396,18 +362,19 @@ class GameScreen implements Screen, InputProcessor {
     @Override
     public void dispose() {
         stage.dispose();
-        world.dispose();
+        gameState.getWorld().dispose();
         UIStage.dispose();
         PostStage.dispose();
         selectionStage.dispose();
+        networkStage.dispose();
     }
 
     @Override
     public void render(float delta) {
-        if(!battleHasStarted) {
-            preparationDuration -= Gdx.graphics.getDeltaTime();
+        if(!gameState.isBattleHasStarted()) {
+            gameState.setPreparationDuration(gameState.getPreparationDuration() - Gdx.graphics.getDeltaTime());
 
-            int time = (int)Math.ceil(preparationDuration);
+            int time = (int)Math.ceil(gameState.getPreparationDuration());
 
             battleCountdownLabel.setText(toTime(time));
 
@@ -462,8 +429,8 @@ class GameScreen implements Screen, InputProcessor {
                 announce1Flag = true;
             }
 
-            if(preparationDuration < 0) {
-                battleHasStarted = true;
+            if(gameState.getPreparationDuration() < 0) {
+                gameState.setBattleHasStarted(true);
 
                 setObjective(1);
 
@@ -478,83 +445,86 @@ class GameScreen implements Screen, InputProcessor {
             }
         }
 
-        if(state == IN_BATTLE) {
-            if(currentObjective == 1) {
-                if(getNumberOfHeroesTeam(objective1Heroes, 0) > 0 && getNumberOfHeroesTeam(objective1Heroes, 1) == 0) {
-                    objective1Capture += Gdx.graphics.getDeltaTime() * objective1Heroes.size() * Config.CAPPING_MODIFIER;
+        if(gameState.getCurrentObjective() == 1) {
+            if(getNumberOfHeroesTeam(gameState.getObjective1Heroes(), 0) > 0 && getNumberOfHeroesTeam(gameState.getObjective1Heroes(), 1) == 0) {
+                gameState.setObjective1Capture(gameState.getObjective1Capture() + Gdx.graphics.getDeltaTime() * gameState.getObjective1Heroes().size() * Config.CAPPING_MODIFIER);
 
-                    if(objective1Capture > 100) {
-                        setObjective(2);
+                if(gameState.getObjective1Capture() > 100) {
+                    setObjective(2);
 
-                        announce60RemainingFlag = false;
-                        announce30RemainingFlag = false;
-                        announce10RemainingFlag = false;
+                    announce60RemainingFlag = false;
+                    announce30RemainingFlag = false;
+                    announce10RemainingFlag = false;
 
-                        if(currentPlayer.getTeam() == 0) {
-                            // captured
-                            objectiveCapturedSFX.play();
+                    if(currentPlayer.getTeam() == 0) {
+                        // captured
+                        objectiveCapturedSFX.play();
 
-                            Timer.schedule(new Timer.Task() {
-                                @Override
-                                public void run() {
-                                    captureTheObjectiveSFX.play();
-                                }
-                            }, 1.8f);
-                        }
-                        else {
-                            // lost
-                            objectiveLostSFX.play();
-
-                            Timer.schedule(new Timer.Task() {
-                                @Override
-                                public void run() {
-                                    defendTheObjectiveSFX.play();
-                                }
-                            }, 1.8f);
-                        }
+                        Timer.schedule(new Timer.Task() {
+                            @Override
+                            public void run() {
+                                captureTheObjectiveSFX.play();
+                            }
+                        }, 1.8f);
                     }
-                }
+                    else {
+                        // lost
+                        objectiveLostSFX.play();
 
-                else if(getNumberOfHeroesTeam(objective1Heroes, 0) > 0 && getNumberOfHeroesTeam(objective1Heroes, 1) > 0) {
-                    // contested
-                }
-
-                else {
-                    objective1Capture -= Gdx.graphics.getDeltaTime() / 2 * Config.CAPPING_MODIFIER;
-
-                    if(objective1Capture < 0) objective1Capture = 0;
+                        Timer.schedule(new Timer.Task() {
+                            @Override
+                            public void run() {
+                                defendTheObjectiveSFX.play();
+                            }
+                        }, 1.8f);
+                    }
                 }
             }
-            else if(currentObjective == 2) {
-                if(getNumberOfHeroesTeam(objective2Heroes, 0) > 0 && getNumberOfHeroesTeam(objective2Heroes, 1) == 0) {
-                    objective2Capture += Gdx.graphics.getDeltaTime() * objective2Heroes.size() * Config.CAPPING_MODIFIER;
 
-                    if(objective2Capture > 100) {
-                        if(currentPlayer.getTeam() == 0) {
-                            victory();
-                        }
-                        else {
-                            defeat();
-                        }
+            else if(getNumberOfHeroesTeam(gameState.getObjective1Heroes(), 0) > 0 && getNumberOfHeroesTeam(gameState.getObjective1Heroes(), 1) > 0) {
+                // contested
+            }
+
+            else {
+                gameState.setObjective1Capture(gameState.getObjective1Capture() - Gdx.graphics.getDeltaTime() / 2 * Config.CAPPING_MODIFIER);
+
+                if(gameState.getObjective1Capture() < 0) {
+                    gameState.setObjective1Capture(0);
+                }
+            }
+        }
+        else if(gameState.getCurrentObjective() == 2) {
+            if(getNumberOfHeroesTeam(gameState.getObjective2Heroes(), 0) > 0 && getNumberOfHeroesTeam(gameState.getObjective2Heroes(), 1) == 0) {
+                gameState.setObjective2Capture(gameState.getObjective2Capture() + Gdx.graphics.getDeltaTime() * gameState.getObjective2Heroes().size() * Config.CAPPING_MODIFIER);
+
+                if(gameState.getObjective2Capture() > 100) {
+                    gameState.setObjective2Capture(100);
+                    if(currentPlayer.getTeam() == 0) {
+                        victory();
+                    }
+                    else {
+                        defeat();
                     }
                 }
+            }
 
-                else if(getNumberOfHeroesTeam(objective2Heroes, 0) > 0 && getNumberOfHeroesTeam(objective2Heroes, 1) > 0) {
-                    // contested
-                }
+            else if(getNumberOfHeroesTeam(gameState.getObjective2Heroes(), 0) > 0 && getNumberOfHeroesTeam(gameState.getObjective2Heroes(), 1) > 0) {
+                // contested
+            }
 
-                else {
-                    objective2Capture -= Gdx.graphics.getDeltaTime() / 2 * Config.CAPPING_MODIFIER;
+            else {
+                gameState.setObjective2Capture(gameState.getObjective2Capture() - Gdx.graphics.getDeltaTime() / 2 * Config.CAPPING_MODIFIER);
 
-                    if(objective2Capture < 0) objective2Capture = 0;
+                if(gameState.getObjective2Capture() < 0) {
+                    gameState.setObjective2Capture(0);
                 }
             }
         }
 
-        if(battleHasStarted && state == IN_BATTLE) {
-            gameTimer -= Gdx.graphics.getDeltaTime();
+        if(gameState.isBattleHasStarted()) {
+            gameState.setGameTimer(gameState.getGameTimer() - Gdx.graphics.getDeltaTime());
 
-            int time = (int)Math.ceil(gameTimer);
+            int time = (int)Math.ceil(gameState.getGameTimer());
 
             battleCountdownLabel.setText(toTime(time));
 
@@ -571,7 +541,7 @@ class GameScreen implements Screen, InputProcessor {
                 announce10RemainingFlag = true;
             }
 
-            if(gameTimer <= 0) {
+            if(gameState.getGameTimer() <= 0) {
                 if(currentPlayer.getTeam() == 0) {
                     defeat();
                 }
@@ -588,17 +558,17 @@ class GameScreen implements Screen, InputProcessor {
             flashLabel.setText("");
         }
 
-        if(!heroSelectionFinished) {
-            countdown -= Gdx.graphics.getDeltaTime();
+        if(!gameState.isHeroSelectionFinished()) {
+            gameState.setCountdown(gameState.getCountdown() - Gdx.graphics.getDeltaTime());
 
-            if(countdown < 1) {
-                heroSelectionFinished = true;
+            if(gameState.getCountdown() < 1) {
+                gameState.setHeroSelectionFinished(true);
 
                 selectionStage.addActor(okButton);
                 countdownLabel.remove();
             }
             else {
-                countdownLabel.setText("Assemble your team: " + (int)Math.floor(countdown));
+                countdownLabel.setText("Assemble your team: " + (int)Math.floor(gameState.getCountdown()));
             }
         }
 
@@ -607,55 +577,51 @@ class GameScreen implements Screen, InputProcessor {
             ammoCountLabel.setText(playerHero.getCurrentAmmo() + "/" + playerHero.getMaxAmmo());
         }
 
-        if(LeftMouseHold && !playerHero.isDead()) {
+        if(LeftMouseHold && playerHero != null && !playerHero.isDead()) {
             Vector3 hoverCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
             Vector3 position = GameScreen.camera.unproject(hoverCoordinates);
             playerHero.firePrimary(position.x, position.y);
+            NetworkHelper.clientSend(new Packet("HERO_FIRE_PRIMARY", new HeroFirePrimary(currentPlayer.getName(), position.x, position.y)), NetworkHelper.getHost());
         }
         else {
             LeftMouseHold = false;
         }
 
-        if(!heroes.get(1).isDead()) {
-            heroes.get(1).firePrimary(0, 0);
+        for(Projectile p: gameState.getProjectilesDestroyed()) {
+            gameState.getWorld().destroyBody(p.getBody());
+            gameState.getProjectiles().remove(p);
         }
 
-        for(Projectile p: projectilesDestroyed) {
-            world.destroyBody(p.getBody());
-            projectiles.remove(p);
+        for(Hero b: gameState.getHeroesDestroyed()) {
+            gameState.getWorld().destroyBody(b.getBody());
+            gameState.getHeroes().remove(b);
         }
 
-        for(Hero b: heroesDestroyed) {
-            world.destroyBody(b.getBody());
-            heroes.remove(b);
-        }
-
-        projectilesDestroyed.clear();
-
-        heroesDestroyed.clear();
+        gameState.getProjectilesDestroyed().clear();
+        gameState.getHeroesDestroyed().clear();
 
         if(playerHero != null && !playerHero.isDead()) {
             updateSpeed(playerHero);
         }
 
-        if(slowmo) {
-            world.step(1f/240f, 6, 2);
+        if(gameState.isSlowmo()) {
+            gameState.getWorld().step(1f/240f, 6, 2);
         }
         else {
-            world.step(1f/60f, 6, 2);
+            gameState.getWorld().step(1f/60f, 6, 2);
         }
 
         for(ParticleEffect pe: particles) {
             pe.update(Gdx.graphics.getDeltaTime());
         }
 
-        for(Hero hero: heroes) {
+        for(Hero hero: gameState.getHeroes()) {
             hero.setPosition(hero.getBody().getPosition().x * Config.PIXELS_TO_METERS, hero.getBody().getPosition().y * Config.PIXELS_TO_METERS);
 
             hero.setRotation((float)Math.toDegrees(hero.getBody().getAngle()));
         }
 
-        for(Projectile projectile: projectiles) {
+        for(Projectile projectile: gameState.getProjectiles()) {
             projectile.setPosition(projectile.getBody().getPosition().x * Config.PIXELS_TO_METERS, projectile.getBody().getPosition().y * Config.PIXELS_TO_METERS);
 
             projectile.setRotation((float)Math.toDegrees(projectile.getBody().getAngle()));
@@ -665,12 +631,17 @@ class GameScreen implements Screen, InputProcessor {
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        if(state == HERO_SELECTION) {
-            // kunwari base
-            camera.position.x = 1100;
-            camera.position.y = 1100;
+        if(gameState.getState() == HERO_SELECTION) {
+            if(currentPlayer.getTeam() == 0) {
+                camera.position.x = GameState.getAttackersSpawnX();
+                camera.position.y = GameState.getAttackersSpawnY();
+            }
+            else {
+                camera.position.x = GameState.getDefendersSpawnX();
+                camera.position.y = GameState.getDefendersSpawnY();
+            }
         }
-        else if(state == IN_BATTLE || state == POST_GAME) {
+        else if(gameState.getState() == IN_BATTLE || gameState.getState() == POST_GAME) {
             Vector3 mouseCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
             mouseCoordinates = camera.unproject(mouseCoordinates);
 
@@ -697,6 +668,12 @@ class GameScreen implements Screen, InputProcessor {
         renderObjective(1);
         renderObjective(2);
 
+        networkStage.getBatch().begin();
+
+        Overwatch2D.gameInformationFont.draw(networkStage.getBatch(), "FPS:" + Gdx.graphics.getFramesPerSecond(), 10, Gdx.graphics.getHeight() - 15);
+
+        networkStage.getBatch().end();
+
         stage.draw();
         stage.getBatch().begin();
 
@@ -711,11 +688,11 @@ class GameScreen implements Screen, InputProcessor {
 
         stage.getBatch().end();
 
-        if(state == HERO_SELECTION) {
+        if(gameState.getState() == HERO_SELECTION) {
             selectionStage.draw();
         }
 
-        if(state == IN_BATTLE) {
+        if(gameState.getState() == IN_BATTLE) {
             UIStage.draw();
 
             if(flashNotificationTTL > 0) {
@@ -736,7 +713,7 @@ class GameScreen implements Screen, InputProcessor {
             UIStage.getBatch().end();
         }
 
-        if(state == POST_GAME) {
+        if(gameState.getState() == POST_GAME) {
             Gdx.gl.glEnable(GL20.GL_BLEND);
             Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
@@ -759,14 +736,26 @@ class GameScreen implements Screen, InputProcessor {
 
         particlesDestroyed.clear();
 
-        debugRenderer.render(world, debugMatrix);
+        debugRenderer.render(gameState.getWorld(), debugMatrix);
 
         mouseMoved(Gdx.input.getX(), Gdx.input.getY());
+
+        if(playerHero != null) {
+            String name = currentPlayer.getName();
+            float x = playerHero.getBody().getWorldCenter().x;
+            float y = playerHero.getBody().getWorldCenter().y;
+            float angle = playerHero.getBody().getAngle();
+            int currentHP = playerHero.getCurrentHealth();
+            boolean isDead = playerHero.isDead();
+            float timeToRespawn = playerHero.getTimeToRespawn();
+
+            NetworkHelper.clientSend(new Packet("HERO_UPDATE", new HeroUpdatePacket(name, x, y, angle, currentHP, isDead, timeToRespawn)), NetworkHelper.getHost());
+        }
     }
 
     @Override
     public boolean keyUp(int keycode) {
-        if((state == IN_BATTLE || state == POST_GAME) && !playerHero.isDead()) {
+        if((gameState.getState() == IN_BATTLE || gameState.getState() == POST_GAME) && !playerHero.isDead()) {
             if(keycode == Input.Keys.W) {
                 WHold = false;
             }
@@ -798,7 +787,7 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean keyDown(int keycode) {
-        if((state == IN_BATTLE || state == POST_GAME) && !playerHero.isDead()) {
+        if((gameState.getState() == IN_BATTLE || gameState.getState() == POST_GAME) && !playerHero.isDead()) {
             if(keycode == Input.Keys.W) {
                 WHold = true;
             }
@@ -816,15 +805,15 @@ class GameScreen implements Screen, InputProcessor {
         return false;
     }
 
-    private void setState(int state) {
-        this.state = state;
+    private static void setState(int state) {
+        gameState.setState(state);
 
         if(state == IN_BATTLE) {
             Gdx.input.setCursorCatched(true);
             selectionStage.clear();
         }
         else if(state == POST_GAME) {
-            slowmo = true;
+            gameState.setSlowmo(true);
         }
         else if(state == HERO_SELECTION) {
             Gdx.input.setCursorCatched(false);
@@ -861,10 +850,10 @@ class GameScreen implements Screen, InputProcessor {
         inputs = new InputMultiplexer(selectionStage, this);
         Gdx.input.setInputProcessor(inputs);
 
-        if(state == HERO_SELECTION) {
+        if(gameState.getState() == HERO_SELECTION) {
             Gdx.input.setCursorCatched(false);
         }
-        if(state == IN_BATTLE || state == POST_GAME) {
+        if(gameState.getState() == IN_BATTLE || gameState.getState() == POST_GAME) {
             Gdx.input.setCursorCatched(true);
         }
     }
@@ -877,15 +866,17 @@ class GameScreen implements Screen, InputProcessor {
     public void pause() {
         Gdx.input.setCursorCatched(false);
 
+        Gdx.app.getApplicationListener().resume();
+
         isAltTabbed = true;
     }
 
     @Override
     public void resume() {
-        if(state == HERO_SELECTION) {
+        if(gameState.getState() == HERO_SELECTION) {
             Gdx.input.setCursorCatched(false);
         }
-        if(state == IN_BATTLE || state == POST_GAME) {
+        if(gameState.getState() == IN_BATTLE || gameState.getState() == POST_GAME) {
             Gdx.input.setCursorCatched(true);
         }
 
@@ -904,7 +895,7 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        if(state == IN_BATTLE || state == POST_GAME) {
+        if(gameState.getState() == IN_BATTLE || gameState.getState() == POST_GAME) {
             if(!playerHero.isDead()) {
                 LeftMouseHold = true;
             }
@@ -916,7 +907,7 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        if(state == IN_BATTLE || state == POST_GAME) {
+        if(gameState.getState() == IN_BATTLE || gameState.getState() == POST_GAME) {
             LeftMouseHold = false;
         }
 
@@ -930,7 +921,7 @@ class GameScreen implements Screen, InputProcessor {
 
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
-        if(state == IN_BATTLE || state == POST_GAME) {
+        if(gameState.getState() == IN_BATTLE || gameState.getState() == POST_GAME) {
             if(!isAltTabbed) {
                 Gdx.input.setCursorPosition(Math.max(Math.min(screenX, Gdx.graphics.getWidth()), 0), Math.max(Math.min(screenY, Gdx.graphics.getHeight()), 0));
             }
@@ -958,7 +949,7 @@ class GameScreen implements Screen, InputProcessor {
         return false;
     }
 
-    private void initSelectionStage() {
+    private static void initSelectionStage() {
         TextButton.TextButtonStyle okStyle = new TextButton.TextButtonStyle();
         okStyle.font = game.gameSelectionOKFont;
 
@@ -970,32 +961,13 @@ class GameScreen implements Screen, InputProcessor {
         okButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y) {
-                if(state == HERO_SELECTION) {
-                    setState(IN_BATTLE);
-
-                    float spawnX, spawnY;
-
-                    if(currentPlayer.getTeam() == 0) {
-                        spawnX = ATTACKERS_SPAWN_X;
-                        spawnY = ATTACKERS_SPAWN_Y;
-                    }
-                    else {
-                        spawnX = DEFENDERS_SPAWN_X;
-                        spawnY = DEFENDERS_SPAWN_Y;
-                    }
-
-                    Hero h = new Hero(spawnX, spawnY, currentPlayer);
-
-                    spawnHero(h);
-
-                    currentPlayer.setHero(h);
-
-                    playerHero.playSelectedSound();
+                if(gameState.getState() == HERO_SELECTION) {
+                    NetworkHelper.clientSend(new Packet("HERO_SPAWN", new HeroSpawnPacket(Overwatch2D.getName())), NetworkHelper.getHost());
                 }
             }
         });
 
-        if(heroSelectionFinished) {
+        if(gameState.isHeroSelectionFinished()) {
             selectionStage.addActor(okButton);
         }
 
@@ -1016,14 +988,14 @@ class GameScreen implements Screen, InputProcessor {
         selectionStage.addActor(countdownLabel);
     }
 
-    private void spawnHero(Hero e) {
+    private static void spawnHero(Hero e) {
         if(e.getPlayerName() == currentPlayer.getName()) {
             playerHero = e;
 
             initPortrait();
         }
 
-        heroes.add(e);
+        gameState.getHeroes().add(e);
     }
 
     private void initUIElements() {
@@ -1104,7 +1076,7 @@ class GameScreen implements Screen, InputProcessor {
         UIStage.addActor(objectiveLabel);
     }
 
-    private void initPortrait() {
+    private static void initPortrait() {
         heroPortraitTexture = playerHero.getPortraitTexture();
         heroPortraitSprite = new Sprite(heroPortraitTexture);
         heroPortraitSprite.setPosition(100 - heroPortraitSprite.getWidth()/2, 90 - heroPortraitSprite.getHeight()/2);
@@ -1116,7 +1088,7 @@ class GameScreen implements Screen, InputProcessor {
         bodyDef.type = BodyDef.BodyType.DynamicBody;
         bodyDef.position.set((x1 + x2) / 2 / Config.PIXELS_TO_METERS, (y1 + y2) / 2 / Config.PIXELS_TO_METERS);
 
-        Body physicsBody = GameScreen.world.createBody(bodyDef);
+        Body physicsBody = GameScreen.getGameState().getWorld().createBody(bodyDef);
 
         PolygonShape shape = new PolygonShape();
         shape.setAsBox((x2 - x1) / 2 / Config.PIXELS_TO_METERS, (y2 - y1) / 2 / Config.PIXELS_TO_METERS);
@@ -1154,15 +1126,22 @@ class GameScreen implements Screen, InputProcessor {
     }
 
     private void setObjective(int obj) {
-        currentObjective = obj;
+        gameState.setCurrentObjective(obj);
 
-        gameTimer += BATTLE_DURATION;
+        if(obj == 1) {
+            gameState.setObjective1Capture(0);
+        }
+        else if(obj == 2) {
+            gameState.setObjective2Capture(0);
+        }
+
+        gameState.setGameTimer(gameState.getGameTimer() + gameState.getBattleDuration());
 
         if(currentPlayer.getTeam() == 0) {
-            flashObjective("Capture Objective " + Character.toString((char) (64 + currentObjective)));
+            flashObjective("Capture Objective " + Character.toString((char) (64 + gameState.getCurrentObjective())));
         }
         else {
-            flashObjective("Defend Objective " + Character.toString((char) (64 + currentObjective)));
+            flashObjective("Defend Objective " + Character.toString((char) (64 + gameState.getCurrentObjective())));
         }
     }
 
@@ -1179,7 +1158,7 @@ class GameScreen implements Screen, InputProcessor {
     private void renderObjective(int obj) {
         Color c;
 
-        if(obj >= currentObjective) {
+        if(obj >= gameState.getCurrentObjective()) {
             c = new Color(0.64f, 0.0f, 0.0f, 1);
         }
         else {
@@ -1195,13 +1174,13 @@ class GameScreen implements Screen, InputProcessor {
             objectivex1 = objective1x1;
             objectivex2 = objective1x2;
             objectivey2 = objective1y2;
-            objectiveCapture = objective1Capture;
+            objectiveCapture = gameState.getObjective1Capture();
         }
         else {
             objectivex1 = objective2x1;
             objectivex2 = objective2x2;
             objectivey2 = objective2y2;
-            objectiveCapture = objective2Capture;
+            objectiveCapture = gameState.getObjective2Capture();
         }
 
         GlyphLayout layout = new GlyphLayout();
@@ -1381,5 +1360,58 @@ class GameScreen implements Screen, InputProcessor {
 
         stage.getBatch().setShader(null);
         tiledMapRenderer.getBatch().setShader(null);
+    }
+
+    public static GameState getGameState() {
+        return gameState;
+    }
+
+    public static void spawnPlayer(String playername) {
+        float spawnX, spawnY;
+
+        Player player = gameState.getPlayers().stream().filter(p -> p.getName().equals(playername)).collect(Collectors.toList()).get(0);
+
+        if(player.getTeam() == 0) {
+            spawnX = gameState.getAttackersSpawnX();
+            spawnY = gameState.getAttackersSpawnY();
+        }
+        else {
+            spawnX = gameState.getDefendersSpawnX();
+            spawnY = gameState.getDefendersSpawnY();
+        }
+
+        Hero h = new Hero(spawnX, spawnY, player);
+
+        player.setHero(h);
+
+        spawnHero(h);
+
+        if(playername.equals(currentPlayer.getName())) {
+            setState(IN_BATTLE);
+
+            currentPlayer.setHero(h);
+
+            playerHero.playSelectedSound();
+        }
+    }
+
+    public static void updateHero(String name, float x, float y, float angle, int currentHP, boolean isDead, float timeToRespawn) {
+        Hero h = gameState.getPlayers().stream().filter(p -> p.getName().equals(name)).collect(Collectors.toList()).get(0).getHero();
+
+        if(h != null) {
+            h.getBody().setTransform(x, y, angle);
+
+            h.setCurrentHP(currentHP);
+            h.setIsDead(isDead);
+            h.setTimeToRespawn(timeToRespawn);
+        }
+    }
+
+    public static void firePrimary(String name, float x, float y) {
+        Hero h = gameState.getPlayers().stream().filter(p -> p.getName().equals(name)).collect(Collectors.toList()).get(0).getHero();
+
+        if(h != null) {
+            h.firePrimary(x, y);
+        }
     }
 }
