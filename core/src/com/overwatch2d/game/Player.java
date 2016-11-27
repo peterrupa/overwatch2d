@@ -15,6 +15,8 @@ public class Player implements Serializable {
     private Hero hero = null;
     private int team = 0;
     private int port;
+    private int eliminations = 0;
+    private int deaths = 0;
 
     //constructor
     public Player(String name, InetAddress address, int port){
@@ -48,6 +50,15 @@ public class Player implements Serializable {
     public void setHero(Hero h) {
         this.hero = h;
     }
+
+    public int getDeaths(){ return deaths; }
+
+    public int getEliminations(){ return eliminations
+            ; }
+
+    public void incDeaths(){ deaths = deaths + 1; }
+
+    public void incEliminations(){ eliminations = eliminations + 1; }
 
     public String toString(){
         String str = "{name: \"" + name + "\", team: " + team + ", address: \"" + address.toString() + "\"}";

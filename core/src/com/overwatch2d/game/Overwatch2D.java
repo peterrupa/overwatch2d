@@ -23,7 +23,9 @@ public class Overwatch2D extends Game {
     static BitmapFont gamePostgamefont;
     static BitmapFont gameTeamLabelsFont;
     static BitmapFont gameInformationFont;
+    static BitmapFont gameUIDeathsFont;
     static ShapeRenderer shapeRenderer;
+    static BitmapFont gameUIEliminationsFont;
     static Thread clientReceiver;
     static Thread serverReceiver;
     private static String name = (int)Math.floor(Math.random() * 100) + "";
@@ -44,6 +46,8 @@ public class Overwatch2D extends Game {
         gameSelectionOKFont = createFont("fonts/koverwatch.ttf", 30);
         gameSelectionCountdownFont = createFont("fonts/bignoodletoo.ttf", 24);
         gamePostgamefont = createFont("fonts/bignoodletoo.ttf", 150);
+        gameUIDeathsFont = createFont("fonts/bignoodletoo.ttf", 30);
+        gameUIEliminationsFont = createFont("fonts/bignoodletoo.ttf", 30);
         gameTeamLabelsFont = createFont("fonts/bignoodletoo.ttf", 60);
         gameInformationFont = createFont("fonts/koverwatch.ttf", 15);
         shapeRenderer = new ShapeRenderer();

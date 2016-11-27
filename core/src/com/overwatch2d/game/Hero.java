@@ -336,10 +336,14 @@ class Hero extends Actor implements Serializable {
 
         if(GameScreen.getCurrentPlayer().getHero() == this) {
             GameScreen.setSepia();
-
+            GameScreen.getCurrentPlayer().incDeaths();
+            GameScreen.updateDeathsLabel("Deaths: " + GameScreen.getCurrentPlayer().getDeaths());
             GameScreen.flashNotification("You have been eliminated by " + killer.getPlayer().getName());
+
         }
         else if(GameScreen.getCurrentPlayer().getHero() == killer) {
+            GameScreen.getCurrentPlayer().incEliminations();
+            GameScreen.updateEliminationsLabel("Kills: " + GameScreen.getCurrentPlayer().getEliminations());
             GameScreen.flashNotification("Eliminated " + getPlayerName());
             eliminationSound.play();
         }
