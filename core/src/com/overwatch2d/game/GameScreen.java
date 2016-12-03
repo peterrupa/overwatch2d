@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g2d.ParticleEmitter;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -179,7 +180,7 @@ class GameScreen implements Screen, InputProcessor {
         selectionStage = new Stage();
         networkStage = new Stage();
 
-        TiledMap tiledMap = new TmxMapLoader().load("map/sampleMap.tmx");
+        TiledMap tiledMap = new TmxMapLoader().load("map/desert.tmx");
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
 
         // create physics world
@@ -1368,7 +1369,6 @@ class GameScreen implements Screen, InputProcessor {
 
     public static void spawnPlayer(String playername) {
         float spawnX, spawnY;
-
         Player player = gameState.getPlayers().stream().filter(p -> p.getName().equals(playername)).collect(Collectors.toList()).get(0);
 
         if(player.getTeam() == 0) {

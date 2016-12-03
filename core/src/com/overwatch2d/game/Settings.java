@@ -54,7 +54,7 @@ public class Settings implements Screen, InputProcessor {
 
         stage.addActor(back);
 
-        final Image backGradient = new Image(new Texture(Gdx.files.internal("effects/orange.jpg")));
+        final Image backGradient = new Image(new Texture(Gdx.files.internal("effects/button_gradient.png")));
         backGradient.setScale(0.45f);
         backGradient.setPosition(850, 150 - backGradient.getHeight()/2);
         backGradient.setColor(1, 1, 1, 0);

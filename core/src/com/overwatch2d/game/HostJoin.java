@@ -51,14 +51,14 @@ public class HostJoin implements Screen, InputProcessor {
         TextButtonStyle textStyle = new TextButtonStyle();
         textStyle.font = game.font;
 
-        TextButton tutorial = new TextButton("Tutorial", textStyle);
-        tutorial.setPosition(290,400 - tutorial.getHeight()/2);
+        Image tutorial = new Image(new Texture(Gdx.files.internal("effects/tutorial1.png")));
+        tutorial.setPosition(50,400 - tutorial.getHeight()/2);
 
         stage.addActor(tutorial);
 
-        final Image tutorialGradient = new Image(new Texture(Gdx.files.internal("effects/orange.jpg")));
-        tutorialGradient.setScale(0.45f);
-        tutorialGradient.setPosition(240, 450 - tutorialGradient.getHeight()/2);
+        final Image tutorialGradient = new Image(new Texture(Gdx.files.internal("effects/tutorial2.png")));
+        //tutorialGradient.setScale(0.45f);
+        tutorialGradient.setPosition(50, 400 - tutorialGradient.getHeight()/2);
         tutorialGradient.setColor(1, 1, 1, 0);
 
         stage.addActor(tutorialGradient);
@@ -82,14 +82,14 @@ public class HostJoin implements Screen, InputProcessor {
             }
         });
 
-        TextButton hgame = new TextButton("Host Game", textStyle);
-        hgame.setPosition(590,400 - hgame.getHeight()/2);
+        Image hgame = new Image(new Texture(Gdx.files.internal("effects/host1.png")));
+        hgame.setPosition(485,400 - hgame.getHeight()/2);
 
         stage.addActor(hgame);
 
-        final Image hgameGradient = new Image(new Texture(Gdx.files.internal("effects/orange.jpg")));
-        hgameGradient.setScale(0.45f);
-        hgameGradient.setPosition(540, 450 - hgameGradient.getHeight()/2);
+        final Image hgameGradient = new Image(new Texture(Gdx.files.internal("effects/host2.png")));
+        //hgameGradient.setScale(0.45f);
+        hgameGradient.setPosition(485, 400 - hgameGradient.getHeight()/2);
         hgameGradient.setColor(1, 1, 1, 0);
 
         stage.addActor(hgameGradient);
@@ -115,14 +115,14 @@ public class HostJoin implements Screen, InputProcessor {
             }
         });
 
-        TextButton jgame = new TextButton("Join Game", textStyle);
-        jgame.setPosition(890, 400 - jgame.getHeight()/2);
+        Image jgame = new Image(new Texture(Gdx.files.internal("effects/join1.png")));
+        jgame.setPosition(920, 400 - jgame.getHeight()/2);
 
         stage.addActor(jgame);
 
-        final Image jgameGradient = new Image(new Texture(Gdx.files.internal("effects/orange.jpg")));
-        jgameGradient.setScale(0.45f);
-        jgameGradient.setPosition(840, 450 - jgameGradient.getHeight()/2);
+        final Image jgameGradient = new Image(new Texture(Gdx.files.internal("effects/join2.png")));
+        //jgameGradient.setScale(0.45f);
+        jgameGradient.setPosition(920, 400 - jgameGradient.getHeight()/2);
         jgameGradient.setColor(1, 1, 1, 0);
 
         stage.addActor(jgameGradient);
@@ -151,7 +151,7 @@ public class HostJoin implements Screen, InputProcessor {
 
         stage.addActor(back);
 
-        final Image backGradient = new Image(new Texture(Gdx.files.internal("effects/orange.jpg")));
+        final Image backGradient = new Image(new Texture(Gdx.files.internal("effects/button_gradient.png")));
         backGradient.setScale(0.45f);
         backGradient.setPosition(850, 150 - backGradient.getHeight()/2);
         backGradient.setColor(1, 1, 1, 0);

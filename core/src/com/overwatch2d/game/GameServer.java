@@ -58,6 +58,7 @@ public class GameServer implements Constants {
     public void changeTeam(String name, int team) {
         Player changer = players.stream().filter(p -> p.getName().equals(name)).collect(Collectors.toList()).get(0);
 
+
         changer.setTeam(team);
         broadcast(new Packet("CHANGE_TEAM", new ChangeTeamPacket(name, team)));
 

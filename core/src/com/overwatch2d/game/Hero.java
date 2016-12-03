@@ -8,6 +8,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
@@ -52,11 +54,15 @@ class Hero extends Actor implements Serializable {
 
     private float timeToRespawn = 0;
 
+    private TiledMapTileLayer collisionLayer;
+
+    //Hero(float initialX, float initialY, Player player, TiledMapTileLayer collisionLayer) {
     Hero(float initialX, float initialY, Player player) {
         this.MAX_HEALTH = 200;
         this.currentHP = 200;
         this.replenishAmmo();
         this.player = player;
+        this.collisionLayer = collisionLayer;
 
         setSize(texture.getWidth(), texture.getHeight());
 
@@ -87,8 +93,75 @@ class Hero extends Actor implements Serializable {
 
         physicsBody.createFixture(fixtureDef);
         physicsBody.setUserData(this);
-
         shape.dispose();
+
+        //collision detection
+        /*float oldX = getX(), oldY = getY(), tileWidth = collisionLayer.getTileWidth(), tileHeight = collisionLayer.getTileHeight();
+        boolean collisionX = false, collisionY = false;
+
+        if(bodyDef.position.x < 0) {
+            //if left
+            //top left
+            collisionX = collisionLayer.getCell((int) (getX() / tileWidth), (int) ((getY() + getHeight()) / tileHeight))
+                    .getTile().getProperties().containsKey("blocked");
+            //middle left
+            collisionX |= collisionLayer.getCell((int) (getX() / tileWidth), (int) ((getY() + getHeight() / 2) / tileHeight))
+                    .getTile().getProperties().containsKey("blocked");
+            //bottom left
+            collisionX |= collisionLayer.getCell((int) (getX() / tileWidth), (int) ((getY()) / tileHeight))
+                    .getTile().getProperties().containsKey("blocked");
+        }
+        else if (bodyDef.position.x >0) {
+            //if right
+            //top right
+            collisionX = collisionLayer.getCell((int) ((getX() + getWidth()) / tileWidth), (int) ((getY() + getHeight()) / tileHeight))
+                    .getTile().getProperties().containsKey("blocked");
+            //middle right
+            collisionX |= collisionLayer.getCell((int) ((getX() + getWidth()) / tileWidth), (int) ((getY() + getHeight() / 2) / tileHeight))
+                    .getTile().getProperties().containsKey("blocked");
+            //bottom right
+            collisionX |= collisionLayer.getCell((int) (getX() / tileWidth), (int) ((getY()) / tileHeight))
+                    .getTile().getProperties().containsKey("blocked");
+        }
+
+        //reaction
+        if (collisionX){
+            bodyDef.position.set(oldX, getY());
+        }
+
+        if(bodyDef.position.y <0) {
+            //if sa  baba
+            //bottom left
+            collisionY = collisionLayer.getCell((int) ((getX()) / tileWidth), (int) ((getY()) / tileHeight))
+                    .getTile().getProperties().containsKey("blocked");
+
+            //bottom middle
+            collisionY |= collisionLayer.getCell((int) ((getX() + getWidth() / 2) / tileWidth), (int) ((getY()) / tileHeight))
+                    .getTile().getProperties().containsKey("blocked");
+
+            //bottom right
+            collisionY |= collisionLayer.getCell((int) ((getX() + getWidth()) / tileWidth), (int) ((getY()) / tileHeight))
+                    .getTile().getProperties().containsKey("blocked");
+        }
+        else if(bodyDef.position.y > 0) {
+            //if sa taas
+            //top left
+            collisionY = collisionLayer.getCell((int) ((getX()) / tileWidth), (int) ((getY()) + getHeight() / tileHeight))
+                    .getTile().getProperties().containsKey("blocked");
+
+            //top middle
+            collisionY |= collisionLayer.getCell((int) ((getX() + getWidth() / 2) / tileWidth), (int) ((getY() + getHeight() / 2) / tileHeight))
+                    .getTile().getProperties().containsKey("blocked");
+
+            //top right
+            collisionY |= collisionLayer.getCell((int) ((getX() + getWidth()) / tileWidth), (int) ((getY() + getHeight()) / tileHeight))
+                    .getTile().getProperties().containsKey("blocked");
+        }
+
+        //reaction
+        if (collisionY){
+            bodyDef.position.set(getX(), oldY);
+        }*/
 
         GameScreen.stage.addActor(this);
     }
