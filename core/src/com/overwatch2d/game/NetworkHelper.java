@@ -50,8 +50,9 @@ public class NetworkHelper implements Constants {
                     InetAddress address = packet.getAddress();
                     int port = packet.getPort();
 
-                    if(receivedPacket.getType() != "HERO_UPDATE")
-                    System.out.println("[Client] Received " + receivedPacket.getType() + " from " + address.toString() + ":" + port);
+                    if(!receivedPacket.getType().equals("HERO_UPDATE")) {
+                        System.out.println("[Client] Received " + receivedPacket.getType() + " from " + address.toString() + ":" + port);
+                    }
 
                     switch(receivedPacket.getType()) {
                         case "PLAYER_LIST": {
@@ -145,8 +146,9 @@ public class NetworkHelper implements Constants {
                     InetAddress address = packet.getAddress();
                     int port = packet.getPort();
 
-                    if(receivedPacket.getType() != "HERO_UPDATE")
-                    System.out.println("[Server] Received " + receivedPacket.getType() + " from " + address.toString() + ":" + port);
+                    if(!receivedPacket.getType().equals("HERO_UPDATE")) {
+                        System.out.println("[Server] Received " + receivedPacket.getType() + " from " + address.toString() + ":" + port);
+                    }
 
                     switch(receivedPacket.getType()) {
                         case "CONNECT": {
@@ -213,8 +215,9 @@ public class NetworkHelper implements Constants {
             byte buf[] = Serialize.toBytes(p);
             packet = new DatagramPacket(buf, buf.length, address, PORT);
 
-            if(p.getType() != "HERO_UPDATE")
-            System.out.println("[Client] Sending " + p.getType() + " (" + packet.getLength() +"B) to " + address);
+            if(!p.getType().equals("HERO_UPDATE")) {
+                System.out.println("[Client] Sending " + p.getType() + " (" + packet.getLength() +"B) to " + address);
+            }
 
             clientSocket.send(packet);
         } catch (Exception ioe) {
@@ -231,8 +234,9 @@ public class NetworkHelper implements Constants {
 
             MulticastSocket s = new MulticastSocket(PORT);
 
-            if(p.getType() != "HERO_UPDATE")
-            System.out.println("[Server] Sending " + p.getType() + " (" + packet.getLength() +"B) to " + address + ":" + port);
+            if(!p.getType().equals("HERO_UPDATE")) {
+                System.out.println("[Server] Sending " + p.getType() + " (" + packet.getLength() +"B) to " + address + ":" + port);
+            }
 
             s.send(packet);
 

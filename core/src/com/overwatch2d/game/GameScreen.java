@@ -577,6 +577,8 @@ class GameScreen implements Screen, InputProcessor {
             ammoCountLabel.setText(playerHero.getCurrentAmmo() + "/" + playerHero.getMaxAmmo());
         }
 
+        LeftMouseHold = true;
+
         if(LeftMouseHold && playerHero != null && !playerHero.isDead()) {
             Vector3 hoverCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
             Vector3 position = GameScreen.camera.unproject(hoverCoordinates);
