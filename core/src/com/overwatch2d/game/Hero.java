@@ -24,14 +24,12 @@ class Hero extends Actor implements Serializable {
     private static Texture texture = new Texture(Gdx.files.internal("sprites/actor.png"));
     private Body physicsBody;
     private float speed = 4f;
-    private float projectileSpawnDistance = 0.30f;
-    private float projectileXOffset = 0.25f;
+
     private int MAX_HEALTH;
     private int currentHP;
     private static Texture portrait = new Texture(Gdx.files.internal("portraits/soldier76.png"));
     private Player player;
 
-    private static Sound fireSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/fire.ogg"));
     private static Sound selectSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/spawn.ogg"));
     private static Sound respawnSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/respawn.ogg"));
     private static Sound eliminationSound = Gdx.audio.newSound(Gdx.files.internal("sfx/elimination/elimination.mp3"));
@@ -39,23 +37,13 @@ class Hero extends Actor implements Serializable {
 
     private boolean isDead = false;
 
-    // @TODO: Port to a weapon class
-    private boolean weaponCanFire = true;
-    private boolean isReloading = false;
-    private float weaponFPS = 10f;
-    private float weaponSpread = 20;
-    private final int MAX_BULLET_CAPACITY = 25;
-    private final float TIME_TO_RELOAD = 1.5f;
-    private final int DAMAGE_PER_SHOT = 15;
-    private int currentBullets;
-    private static Sound reloadSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/reload.mp3"));
+    private Weapon weapon;
 
     private float timeToRespawn = 0;
 
     Hero(float initialX, float initialY, Player player) {
         this.MAX_HEALTH = 200;
         this.currentHP = 200;
-        this.replenishAmmo();
         this.player = player;
 
         setSize(texture.getWidth(), texture.getHeight());
@@ -91,6 +79,8 @@ class Hero extends Actor implements Serializable {
         shape.dispose();
 
         GameScreen.stage.addActor(this);
+
+        weapon = new Weapon(this);
     }
 
     public void setBody(Body body) {
@@ -183,52 +173,7 @@ class Hero extends Actor implements Serializable {
         return speed;
     }
 
-    public void firePrimary(float x, float y) {
-        if(weaponCanFire && currentBullets > 0 && !isReloading) {
-            double angle = Math.atan2(
-                y / Config.PIXELS_TO_METERS - physicsBody.getWorldCenter().y,
-                x / Config.PIXELS_TO_METERS - physicsBody.getWorldCenter().x
-            ) * 180.0d / Math.PI;
-
-            x = physicsBody.getWorldCenter().x * Config.PIXELS_TO_METERS + 5f * (float)Math.cos(Math.toRadians(angle)) * Config.PIXELS_TO_METERS;
-            y = physicsBody.getWorldCenter().y * Config.PIXELS_TO_METERS + 5f * (float)Math.sin(Math.toRadians(angle)) * Config.PIXELS_TO_METERS;
-
-            x = x + MathUtils.random(-weaponSpread, weaponSpread);
-            y = y + MathUtils.random(-weaponSpread, weaponSpread);
-
-            float initialX = ((physicsBody.getWorldCenter().x + projectileXOffset * (float)Math.cos(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.cos(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
-            float initialY = ((physicsBody.getWorldCenter().y + projectileXOffset * (float)Math.sin(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.sin(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
-
-            GameScreen.getGameState().getProjectiles().add(new Projectile(
-                initialX,
-                initialY,
-                x,
-                y,
-                DAMAGE_PER_SHOT,
-                this
-            ));
-
-            GameScreen.addParticleGunshot(Gdx.files.internal("particles/gunfire_allied.party"), initialX, initialY, (float)angle, 10f);
-
-            fireSound.play();
-
-            weaponCanFire = false;
-
-            currentBullets--;
-
-            Timer.schedule(new Timer.Task() {
-                @Override
-                public void run() {
-                    weaponCanFire = true;
-                }
-            }, 1f / weaponFPS);
-
-            // reload
-            if(currentBullets <= 0) {
-                reload();
-            }
-        }
-    }
+    public Weapon getWeapon() { return weapon; }
 
     public void damaged(int damage, Hero attacker) {
         currentHP -= damage;
@@ -244,39 +189,12 @@ class Hero extends Actor implements Serializable {
         }
     }
 
-    private void replenishAmmo() {
-        this.currentBullets = MAX_BULLET_CAPACITY;
-    }
-
-    public void reload() {
-        if(currentBullets < MAX_BULLET_CAPACITY && !isReloading) {
-            reloadSound.play();
-            isReloading = true;
-
-            Timer.schedule(new Timer.Task() {
-                @Override
-                public void run() {
-                    replenishAmmo();
-                    isReloading = false;
-                }
-            }, TIME_TO_RELOAD);
-        }
-    }
-
     public int getCurrentHealth() {
         return currentHP;
     }
 
     public int getMaxHealth() {
         return MAX_HEALTH;
-    }
-
-    public int getMaxAmmo() {
-        return MAX_BULLET_CAPACITY;
-    }
-
-    public int getCurrentAmmo() {
-        return currentBullets;
     }
 
     public String getPlayerName() {
@@ -322,9 +240,7 @@ class Hero extends Actor implements Serializable {
             physicsBody.getFixtureList().get(0).getFilterData().categoryBits = Config.HERO_ENTITY_1;
         }
 
-        currentBullets = MAX_BULLET_CAPACITY;
-        weaponCanFire = true;
-        isReloading = false;
+        weapon.restart();
 
         isDead = false;
     }
