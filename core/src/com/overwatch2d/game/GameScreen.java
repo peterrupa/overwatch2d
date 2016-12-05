@@ -1380,7 +1380,7 @@ class GameScreen implements Screen, InputProcessor {
             spawnY = gameState.getDefendersSpawnY();
         }
 
-        Hero h = new Hero(spawnX, spawnY, player);
+        Hero h = new Soldier76(spawnX, spawnY, player);
 
         player.setHero(h);
 

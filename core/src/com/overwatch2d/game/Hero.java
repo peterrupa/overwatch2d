@@ -21,30 +21,35 @@ import java.io.Serializable;
 class Hero extends Actor implements Serializable {
     private final float RESPAWN_TIMER = 5f;
 
-    private static Texture texture = new Texture(Gdx.files.internal("sprites/actor.png"));
+    private static Texture texture;
     private Body physicsBody;
-    private float speed = 4f;
+    private float speed;
 
     private int MAX_HEALTH;
     private int currentHP;
-    private static Texture portrait = new Texture(Gdx.files.internal("portraits/soldier76.png"));
+    private static Texture portrait;
     private Player player;
 
-    private static Sound selectSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/spawn.ogg"));
-    private static Sound respawnSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/respawn.ogg"));
-    private static Sound eliminationSound = Gdx.audio.newSound(Gdx.files.internal("sfx/elimination/elimination.mp3"));
-    private static Sound hitMarkerSound = Gdx.audio.newSound(Gdx.files.internal("sfx/hit/hitmarker.wav"));
+    private Sound selectSound;
+    private Sound respawnSound;
+    private Sound eliminationSound = Gdx.audio.newSound(Gdx.files.internal("sfx/elimination/elimination.mp3"));
+    private Sound hitMarkerSound = Gdx.audio.newSound(Gdx.files.internal("sfx/hit/hitmarker.wav"));
 
     private boolean isDead = false;
 
-    private Weapon weapon;
+    protected Weapon weapon;
 
     private float timeToRespawn = 0;
 
-    Hero(float initialX, float initialY, Player player) {
-        this.MAX_HEALTH = 200;
-        this.currentHP = 200;
+    Hero(float initialX, float initialY, Player player, Texture texture, float speed, int max_health, Texture portrait, Sound selectSound, Sound respawnSound) {
+        this.MAX_HEALTH = max_health;
+        this.currentHP = max_health;
         this.player = player;
+        this.texture = texture;
+        this.speed = speed;
+        this.portrait = portrait;
+        this.selectSound = selectSound;
+        this.respawnSound = respawnSound;
 
         setSize(texture.getWidth(), texture.getHeight());
 
@@ -80,7 +85,7 @@ class Hero extends Actor implements Serializable {
 
         GameScreen.stage.addActor(this);
 
-        weapon = new Weapon(this);
+        this.weapon = weapon;
     }
 
     public void setBody(Body body) {
@@ -206,7 +211,7 @@ class Hero extends Actor implements Serializable {
     }
 
     public void playSelectedSound() {
-        Hero.selectSound.play();
+        selectSound.play();
     }
 
     public void respawn() {
