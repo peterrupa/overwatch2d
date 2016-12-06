@@ -68,8 +68,8 @@ public class GameServer implements Constants {
         broadcast(new Packet("START_GAME", new StartGamePacket()));
     }
 
-    public void spawnHero(String name) {
-        broadcast(new Packet("HERO_SPAWN", new HeroSpawnPacket(name)));
+    public void spawnHero(String name, int heroType) {
+        broadcast(new Packet("HERO_SPAWN", new HeroSpawnPacket(name, heroType)));
     }
 
     public void updateHero(String name, float x, float y, float angle, int currentHP, boolean isDead, float timeToRespawn) {

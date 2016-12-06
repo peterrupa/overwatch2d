@@ -7,10 +7,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import com.badlogic.gdx.graphics.g2d.ParticleEffect;
-import com.badlogic.gdx.graphics.g2d.ParticleEmitter;
-import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
@@ -18,9 +15,9 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
@@ -148,6 +145,12 @@ class GameScreen implements Screen, InputProcessor {
     private boolean isAltTabbed = false;
 
     private static GameState gameState;
+
+    private static int heroSelected = -1;
+
+    private static Image soldier76Full;
+    private static Image mccreeFull;
+    private static Image reaperFull;
 
     GameScreen(final Overwatch2D gam, ArrayList<Player> players, String name) {
         game = gam;
@@ -454,7 +457,7 @@ class GameScreen implements Screen, InputProcessor {
             }
         }
 
-        if(gameState.getCurrentObjective() == 1) {
+        if(gameState.getCurrentObjective() == 1 && gameState.getState() != POST_GAME) {
             if(getNumberOfHeroesTeam(gameState.getObjective1Heroes(), 0) > 0 && getNumberOfHeroesTeam(gameState.getObjective1Heroes(), 1) == 0) {
                 gameState.setObjective1Capture(gameState.getObjective1Capture() + Gdx.graphics.getDeltaTime() * gameState.getObjective1Heroes().size() * Config.CAPPING_MODIFIER);
 
@@ -502,7 +505,7 @@ class GameScreen implements Screen, InputProcessor {
                 }
             }
         }
-        else if(gameState.getCurrentObjective() == 2) {
+        else if(gameState.getCurrentObjective() == 2 && gameState.getState() != POST_GAME) {
             if(getNumberOfHeroesTeam(gameState.getObjective2Heroes(), 0) > 0 && getNumberOfHeroesTeam(gameState.getObjective2Heroes(), 1) == 0) {
                 gameState.setObjective2Capture(gameState.getObjective2Capture() + Gdx.graphics.getDeltaTime() * gameState.getObjective2Heroes().size() * Config.CAPPING_MODIFIER);
 
@@ -958,7 +961,49 @@ class GameScreen implements Screen, InputProcessor {
         return false;
     }
 
+    private static void setHeroSelected(int index) {
+        heroSelected = index;
+
+        if(index == 0) {
+            soldier76Full.setVisible(true);
+            mccreeFull.setVisible(false);
+            reaperFull.setVisible(false);
+        }
+        else if(index == 1) {
+            soldier76Full.setVisible(false);
+            mccreeFull.setVisible(true);
+            reaperFull.setVisible(false);
+        }
+        else if(index == 2) {
+            soldier76Full.setVisible(false);
+            mccreeFull.setVisible(false);
+            reaperFull.setVisible(true);
+        }
+
+        System.out.println(soldier76Full.isVisible());
+        System.out.println(mccreeFull.isVisible());
+        System.out.println(reaperFull.isVisible());
+    }
+
     private static void initSelectionStage() {
+        soldier76Full = new Image(new Texture(Gdx.files.internal("selection/soldier76_selected.png")));
+        soldier76Full.setPosition(Gdx.graphics.getWidth()/2 - soldier76Full.getWidth()/2, 300 - soldier76Full.getHeight()/2);
+        soldier76Full.setVisible(false);
+
+        selectionStage.addActor(soldier76Full);
+
+        mccreeFull = new Image(new Texture(Gdx.files.internal("selection/mccree_selected.png")));
+        mccreeFull.setPosition(Gdx.graphics.getWidth()/2 - mccreeFull.getWidth()/2, 300 - mccreeFull.getHeight()/2);
+        mccreeFull.setVisible(false);
+
+        selectionStage.addActor(mccreeFull);
+
+        reaperFull = new Image(new Texture(Gdx.files.internal("selection/reaper_selected.png")));
+        reaperFull.setPosition(Gdx.graphics.getWidth()/2 - reaperFull.getWidth()/2, 300 - reaperFull.getHeight()/2);
+        reaperFull.setVisible(false);
+
+        selectionStage.addActor(reaperFull);
+
         TextButton.TextButtonStyle okStyle = new TextButton.TextButtonStyle();
         okStyle.font = game.gameSelectionOKFont;
 
@@ -971,7 +1016,9 @@ class GameScreen implements Screen, InputProcessor {
             @Override
             public void clicked(InputEvent e, float x, float y) {
                 if(gameState.getState() == HERO_SELECTION) {
-                    NetworkHelper.clientSend(new Packet("HERO_SPAWN", new HeroSpawnPacket(Overwatch2D.getName())), NetworkHelper.getHost());
+                    if(heroSelected > -1) {
+                        NetworkHelper.clientSend(new Packet("HERO_SPAWN", new HeroSpawnPacket(Overwatch2D.getName(), heroSelected)), NetworkHelper.getHost());
+                    }
                 }
             }
         });
@@ -991,10 +1038,50 @@ class GameScreen implements Screen, InputProcessor {
         Label.LabelStyle countdownStyle = new Label.LabelStyle();
         countdownStyle.font = game.gameSelectionCountdownFont;
 
+        HorizontalGroup hg = new HorizontalGroup();
+        hg.setHeight(100);
+        hg.setPosition(585, 200);
+        hg.align(Align.center);
+
+        ImageButton buttonSoldier = new ImageButton(new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.internal("selection/soldier76.png")))));
+
+        buttonSoldier.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent e, float x, float y) {
+                GameScreen.setHeroSelected(0);
+            }
+        });
+
+        ImageButton buttonMcCree = new ImageButton(new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.internal("selection/mccree.png")))));
+
+        buttonMcCree.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent e, float x, float y) {
+                GameScreen.setHeroSelected(1);
+            }
+        });
+
+        ImageButton buttonReaper = new ImageButton(new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.internal("selection/reaper.png")))));
+
+        buttonReaper.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent e, float x, float y) {
+                GameScreen.setHeroSelected(2);
+            }
+        });
+
+        hg.addActor(buttonSoldier);
+        hg.addActor(buttonMcCree);
+        hg.addActor(buttonReaper);
+
+        selectionStage.addActor(hg);
+
         countdownLabel = new Label("", countdownStyle);
         countdownLabel.setPosition(Gdx.graphics.getWidth()/2 - 70, 100);
 
         selectionStage.addActor(countdownLabel);
+
+        GameScreen.setHeroSelected(heroSelected);
     }
 
     private static void spawnHero(Hero e) {
@@ -1375,7 +1462,7 @@ class GameScreen implements Screen, InputProcessor {
         return gameState;
     }
 
-    public static void spawnPlayer(String playername) {
+    public static void spawnPlayer(String playername, int heroType) {
         float spawnX, spawnY;
 
         Player player = gameState.getPlayers().stream().filter(p -> p.getName().equals(playername)).collect(Collectors.toList()).get(0);
@@ -1389,7 +1476,17 @@ class GameScreen implements Screen, InputProcessor {
             spawnY = gameState.getDefendersSpawnY();
         }
 
-        Hero h = new Reaper(spawnX, spawnY, player);
+        Hero h = null;
+
+        if(heroType == 0) {
+            h = new Soldier76(spawnX, spawnY, player);
+        }
+        else if(heroType == 1) {
+            h = new McCree(spawnX, spawnY, player);
+        }
+        else if(heroType == 2) {
+            h = new Reaper(spawnX, spawnY, player);
+        }
 
         player.setHero(h);
 
