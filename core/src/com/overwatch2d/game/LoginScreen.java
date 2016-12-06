@@ -26,7 +26,6 @@ public class LoginScreen implements Screen {
     private OrthographicCamera camera;
     private Stage stage;
     private TextField txtUsername;
-    private TextField txtPassword;
     private Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
 
     LoginScreen(final Overwatch2D gam) {
@@ -47,23 +46,15 @@ public class LoginScreen implements Screen {
         stage.addActor(background);
 
         txtUsername = new TextField("", skin);
-        txtUsername.setMessageText("Username");
-        txtUsername.setPosition(150, 500);
+        txtUsername.setMessageText("Enter Username");
+        txtUsername.setPosition(150, 450);
 
         stage.addActor(txtUsername);
-        String username = txtUsername.getText();
-
-        txtPassword = new TextField("", skin);
-        txtPassword.setMessageText("Password");
-        txtPassword.setPosition(150, 450);
-
-        stage.addActor(txtPassword);
-        String password = txtPassword.getText();
 
         TextButton.TextButtonStyle textStyle = new TextButton.TextButtonStyle();
         textStyle.font = game.font;
 
-        TextButton login = new TextButton("Login", textStyle);
+        TextButton login = new TextButton("Begin", textStyle);
         login.setPosition(170, 370);
         stage.addActor(login);
 
@@ -77,6 +68,8 @@ public class LoginScreen implements Screen {
         beginGradient.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y) {
+                String username = txtUsername.getText();
+                game.setName(username);
                 game.setScreen(new MainMenu(game));
             }
 
