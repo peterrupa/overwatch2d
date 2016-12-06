@@ -28,15 +28,8 @@ public class LoginScreen implements Screen {
     private static Overwatch2D game = null;
     private OrthographicCamera camera;
     private Stage stage;
-    private static ArrayList<Player> players = new ArrayList<Player>();
-    private static VerticalGroup attackerVG;
-    private static VerticalGroup defenderVG;
 
     LoginScreen(final Overwatch2D gam) {
-        Overwatch2D.createServer();
-        Overwatch2D.createClient();
-        NetworkHelper.connect("localhost", Overwatch2D.getName());
-
         float w = Gdx.graphics.getWidth(),
                 h = Gdx.graphics.getHeight();
 
@@ -52,8 +45,6 @@ public class LoginScreen implements Screen {
         background.setSize(w, h);
 
         stage.addActor(background);
-
-        updateTeamsUI();
 
         TextButton.TextButtonStyle textStyle = new TextButton.TextButtonStyle();
         textStyle.font = game.font;
@@ -131,79 +122,5 @@ public class LoginScreen implements Screen {
     @Override
     public void dispose() {
 
-    }
-
-    public static void startGame() {
-        game.setScreen(new GameScreen(game, players, Overwatch2D.getName()));
-    }
-
-    private static Label createPlayerLabel(String text) {
-        Label.LabelStyle style = new Label.LabelStyle();
-        style.font = Overwatch2D.gameUIFlashFont;
-
-        if(text.equals(Overwatch2D.getName())) {
-            style.fontColor = Color.GOLD;
-        }
-
-        return new Label(text, style);
-    }
-
-    private static void updateTeamsUI() {
-        attackerVG.clear();
-        defenderVG.clear();
-
-        TextButton.TextButtonStyle attackersTextButtonStyle = new TextButton.TextButtonStyle();
-        attackersTextButtonStyle.font = Overwatch2D.gameTeamLabelsFont;
-        attackersTextButtonStyle.fontColor = Color.RED;
-        TextButton attackersTextButton = new TextButton("Attack", attackersTextButtonStyle);
-        attackersTextButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent e, float x, float y) {
-                NetworkHelper.clientSend(new Packet("CHANGE_TEAM", new ChangeTeamPacket(Overwatch2D.getName(), 0)), NetworkHelper.getHost());
-            }
-
-            @Override
-            public void enter(InputEvent e, float x, float y, int pointer, Actor fromActor) {
-            }
-
-            @Override
-            public void exit(InputEvent e, float x, float y, int pointer, Actor fromActor) {
-
-            }
-        });
-        attackerVG.addActor(attackersTextButton);
-
-        TextButton.TextButtonStyle defendersTextButtonStyle = new TextButton.TextButtonStyle();
-        defendersTextButtonStyle.font = Overwatch2D.gameTeamLabelsFont;
-        defendersTextButtonStyle.fontColor = Color.BLUE;
-        TextButton defendersTextButton = new TextButton("Defend", defendersTextButtonStyle);
-        defendersTextButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent e, float x, float y) {
-                NetworkHelper.clientSend(new Packet("CHANGE_TEAM", new ChangeTeamPacket(Overwatch2D.getName(), 1)), NetworkHelper.getHost());
-            }
-
-            @Override
-            public void enter(InputEvent e, float x, float y, int pointer, Actor fromActor) {
-            }
-
-            @Override
-            public void exit(InputEvent e, float x, float y, int pointer, Actor fromActor) {
-
-            }
-        });
-        defenderVG.addActor(defendersTextButton);
-
-        ArrayList<Player> attackers = (ArrayList<Player>) players.stream().filter(p -> p.getTeam() == 0).collect(Collectors.toList());
-
-        for(Player p: attackers) {
-            attackerVG.addActor(createPlayerLabel(p.getName()));
-        }
-
-        ArrayList<Player> defenders = (ArrayList<Player>) players.stream().filter(p -> p.getTeam() == 1).collect(Collectors.toList());
-
-        for(Player p: defenders) {
-            defenderVG.addActor(createPlayerLabel(p.getName()));
-        }
     }
 }
