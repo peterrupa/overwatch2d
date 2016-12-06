@@ -81,8 +81,9 @@ public class NetworkHelper implements Constants {
                         }
                         case "HERO_SPAWN": {
                             String playername = ((HeroSpawnPacket)receivedPacket.getPayload()).getPlayername();
+                            int heroType = ((HeroSpawnPacket)receivedPacket.getPayload()).getHeroType();
 
-                            Gdx.app.postRunnable(() -> GameScreen.spawnPlayer(playername));
+                            Gdx.app.postRunnable(() -> GameScreen.spawnPlayer(playername, heroType));
 
                             break;
                         }
@@ -167,8 +168,9 @@ public class NetworkHelper implements Constants {
                         }
                         case "HERO_SPAWN": {
                             String name = ((HeroSpawnPacket)receivedPacket.getPayload()).getPlayername();
+                            int heroType = ((HeroSpawnPacket)receivedPacket.getPayload()).getHeroType();
 
-                            Overwatch2D.getServer().spawnHero(name);
+                            Overwatch2D.getServer().spawnHero(name, heroType);
 
                             break;
                         }

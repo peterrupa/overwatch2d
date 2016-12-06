@@ -88,13 +88,6 @@ class Hero extends Actor implements Serializable {
         GameScreen.stage.addActor(this);
 
         Hero self = this;
-
-        Timer.schedule(new Timer.Task() {
-            @Override
-            public void run() {
-                damaged(1000, self);
-            }
-        }, 3);
     }
 
     public void setBody(Body body) {
