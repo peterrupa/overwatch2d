@@ -10,10 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
@@ -28,6 +25,9 @@ public class LoginScreen implements Screen {
     private static Overwatch2D game = null;
     private OrthographicCamera camera;
     private Stage stage;
+    private TextField txtUsername;
+    private TextField txtPassword;
+    private Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
 
     LoginScreen(final Overwatch2D gam) {
         float w = Gdx.graphics.getWidth(),
@@ -46,17 +46,30 @@ public class LoginScreen implements Screen {
 
         stage.addActor(background);
 
+        txtUsername = new TextField("", skin);
+        txtUsername.setMessageText("Username");
+        txtUsername.setPosition(150, 500);
+
+        stage.addActor(txtUsername);
+        String username = txtUsername.getText();
+
+        txtPassword = new TextField("", skin);
+        txtPassword.setMessageText("Password");
+        txtPassword.setPosition(150, 450);
+
+        stage.addActor(txtPassword);
+        String password = txtPassword.getText();
+
         TextButton.TextButtonStyle textStyle = new TextButton.TextButtonStyle();
         textStyle.font = game.font;
 
-        TextButton begin = new TextButton("Start", textStyle);
-        begin.setPosition(890, begin.getHeight()/2);
+        TextButton login = new TextButton("Login", textStyle);
+        login.setPosition(170, 370);
+        stage.addActor(login);
 
-        stage.addActor(begin);
-
-        final Image beginGradient = new Image(new Texture(Gdx.files.internal("effects/orange.jpg")));
+        final Image beginGradient = new Image(new Texture(Gdx.files.internal("effects/button_gradient.png")));
         beginGradient.setScale(0.45f);
-        beginGradient.setPosition(890, begin.getHeight()/2);
+        beginGradient.setPosition(130, 350);
         beginGradient.setColor(1, 1, 1, 0);
 
         stage.addActor(beginGradient);
