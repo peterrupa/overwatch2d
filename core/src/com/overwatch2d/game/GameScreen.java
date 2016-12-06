@@ -41,8 +41,8 @@ class GameScreen implements Screen, InputProcessor {
     public static final float DEFENDERS_SPAWN_X = 1000;
     public static final float DEFENDERS_SPAWN_Y = 1000;
 
-    private final float HERO_SELECTION_DURATION = 20f;
-    private final float GAME_PREPARATION_DURATION = 60f + HERO_SELECTION_DURATION;
+    private final float HERO_SELECTION_DURATION = 10f;
+    private final float GAME_PREPARATION_DURATION = 20f + HERO_SELECTION_DURATION;
     private final float BATTLE_DURATION = 65f;
     private static final float NOTIFICATION_DURATION = 3f;
 
