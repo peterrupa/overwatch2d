@@ -258,8 +258,17 @@ class GameScreen implements Screen, InputProcessor {
                         projectile.hit(hitHero);
                         hitSound.play();
 
+                        String particleFile = "";
+
+                        if(hitHero.getPlayer().getTeam() == currentPlayer.getTeam()) {
+                            particleFile = "particles/gunshot_hostile.party";
+                        }
+                        else {
+                            particleFile = "particles/gunshot_allied.party";
+                        }
+
                         addParticle(
-                            Gdx.files.internal("particles/gunshot_allied.party"),
+                            Gdx.files.internal(particleFile),
                             contact.getWorldManifold().getPoints()[0].x * Config.PIXELS_TO_METERS,
                             contact.getWorldManifold().getPoints()[0].y * Config.PIXELS_TO_METERS
                         );
@@ -1380,7 +1389,7 @@ class GameScreen implements Screen, InputProcessor {
             spawnY = gameState.getDefendersSpawnY();
         }
 
-        Hero h = new Soldier76(spawnX, spawnY, player);
+        Hero h = new McCree(spawnX, spawnY, player);
 
         player.setHero(h);
 

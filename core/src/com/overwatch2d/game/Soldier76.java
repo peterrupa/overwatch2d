@@ -17,6 +17,6 @@ public class Soldier76 extends Hero {
             Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/respawn.ogg"))
         );
 
-        weapon = new Weapon(this);
+        weapon = new PulseRifle(this);
     }
 }

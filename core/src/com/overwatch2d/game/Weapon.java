@@ -1,5 +1,6 @@
 package com.overwatch2d.game;
 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.math.MathUtils;
@@ -13,23 +14,25 @@ public class Weapon {
     private final int MAX_BULLET_CAPACITY;
     private final float TIME_TO_RELOAD;
     private final int DAMAGE_PER_SHOT;
-    private float projectileSpawnDistance = 0.30f;
-    private float projectileXOffset = 0.25f;
+    private float projectileSpawnDistance;
+    private float projectileXOffset;
     private int currentBullets;
-    private static Sound reloadSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/reload.mp3"));
-    private static Sound fireSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/fire.ogg"));
+    private Sound reloadSound;
+    private Sound fireSound;
 
     private Hero hero;
 
-    public Weapon(Hero hero) {
-        weaponFPS = 10f;
-        weaponSpread = 20;
-        MAX_BULLET_CAPACITY = 25;
-        currentBullets = MAX_BULLET_CAPACITY;
-        TIME_TO_RELOAD = 1.5f;
-        DAMAGE_PER_SHOT = 15;
-        reloadSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/reload.mp3"));
-        fireSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/fire.ogg"));
+    public Weapon(Hero hero, float weaponFPS, float weaponSpread, int max_bullet, float time_to_reload, int damage_per_shot, float projectileSpawnDistance, float projectileXOffset, Sound reloadSound, Sound fireSound) {
+        this.weaponFPS = weaponFPS;
+        this.weaponSpread = weaponSpread;
+        this.MAX_BULLET_CAPACITY = max_bullet;
+        this.currentBullets = max_bullet;
+        this.TIME_TO_RELOAD = time_to_reload;
+        this.DAMAGE_PER_SHOT = damage_per_shot;
+        this.projectileSpawnDistance = projectileSpawnDistance;
+        this.projectileXOffset = projectileXOffset;
+        this.reloadSound = reloadSound;
+        this.fireSound = fireSound;
         this.hero = hero;
     }
 
@@ -58,7 +61,16 @@ public class Weapon {
                 hero
             ));
 
-            GameScreen.addParticleGunshot(Gdx.files.internal("particles/gunfire_allied.party"), initialX, initialY, (float)angle, 10f);
+            String particleFile;
+
+            if(hero.getPlayer().getTeam() == GameScreen.getCurrentPlayer().getTeam()) {
+                particleFile = "particles/gunfire_allied.party";
+            }
+            else {
+                particleFile = "particles/gunfire_hostile.party";
+            }
+
+            GameScreen.addParticleGunshot(Gdx.files.internal(particleFile), initialX, initialY, (float)angle, 10f);
 
             fireSound.play();
 
@@ -105,11 +117,11 @@ public class Weapon {
         }
     }
 
-    public static Sound getReloadSound() {
+    public Sound getReloadSound() {
         return reloadSound;
     }
 
-    public static Sound getFireSound() {
+    public Sound getFireSound() {
         return fireSound;
     }
 
