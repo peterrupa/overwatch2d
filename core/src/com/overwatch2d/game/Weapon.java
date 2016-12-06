@@ -7,20 +7,20 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Timer;
 
 public class Weapon {
-    private boolean weaponCanFire = true;
-    private boolean isReloading = false;
-    private float weaponFPS = 10f;
-    private float weaponSpread = 20;
-    private final int MAX_BULLET_CAPACITY;
-    private final float TIME_TO_RELOAD;
-    private final int DAMAGE_PER_SHOT;
-    private float projectileSpawnDistance;
-    private float projectileXOffset;
-    private int currentBullets;
-    private Sound reloadSound;
-    private Sound fireSound;
+    protected boolean weaponCanFire = true;
+    protected boolean isReloading = false;
+    protected float weaponFPS = 10f;
+    protected float weaponSpread = 20;
+    protected final int MAX_BULLET_CAPACITY;
+    protected final float TIME_TO_RELOAD;
+    protected final int DAMAGE_PER_SHOT;
+    protected float projectileSpawnDistance;
+    protected float projectileXOffset;
+    protected int currentBullets;
+    protected Sound reloadSound;
+    protected Sound fireSound;
 
-    private Hero hero;
+    protected Hero hero;
 
     public Weapon(Hero hero, float weaponFPS, float weaponSpread, int max_bullet, float time_to_reload, int damage_per_shot, float projectileSpawnDistance, float projectileXOffset, Sound reloadSound, Sound fireSound) {
         this.weaponFPS = weaponFPS;
@@ -52,7 +52,7 @@ public class Weapon {
             float initialX = ((hero.getBody().getWorldCenter().x + projectileXOffset * (float)Math.cos(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.cos(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
             float initialY = ((hero.getBody().getWorldCenter().y + projectileXOffset * (float)Math.sin(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.sin(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
 
-            GameScreen.getGameState().getProjectiles().add(new Projectile(
+            GameScreen.getGameState().getProjectiles().add(new PulseRifleBullet(
                 initialX,
                 initialY,
                 x,

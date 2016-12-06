@@ -12,7 +12,7 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 
 class Projectile extends Actor {
-    private Texture texture = new Texture(Gdx.files.internal("projectiles/sampleBullet.png"));
+    private Texture texture;
     private Body physicsBody;
     private float speed = 0.01f;
     private int damage;
@@ -21,7 +21,8 @@ class Projectile extends Actor {
     private float ttl = 0.5f;
     private boolean hit = false;
 
-    Projectile(float initialX, float initialY, float destX, float destY, int damage, Hero owner) {
+    Projectile(float initialX, float initialY, float destX, float destY, int damage, Hero owner, Texture texture) {
+        this.texture = texture;
         this.owner = owner;
         this.damage = damage;
 

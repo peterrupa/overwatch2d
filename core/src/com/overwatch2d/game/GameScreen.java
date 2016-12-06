@@ -1389,7 +1389,7 @@ class GameScreen implements Screen, InputProcessor {
             spawnY = gameState.getDefendersSpawnY();
         }
 
-        Hero h = new McCree(spawnX, spawnY, player);
+        Hero h = new Reaper(spawnX, spawnY, player);
 
         player.setHero(h);
 
