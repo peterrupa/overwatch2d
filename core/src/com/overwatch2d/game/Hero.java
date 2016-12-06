@@ -16,19 +16,19 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Timer;
 import com.sun.xml.internal.bind.annotation.OverrideAnnotationOf;
 
-import static com.overwatch2d.game.GameScreen.getCurrentPlayer;
+import java.io.Serializable;
 
-class Hero extends Actor {
+class Hero extends Actor implements Serializable {
     private final float RESPAWN_TIMER = 5f;
 
-    private Texture texture = new Texture(Gdx.files.internal("sprites/actor.png"));
+    private static Texture texture = new Texture(Gdx.files.internal("sprites/actor.png"));
     private Body physicsBody;
     private float speed = 4f;
     private float projectileSpawnDistance = 0.30f;
     private float projectileXOffset = 0.25f;
     private int MAX_HEALTH;
     private int currentHP;
-    private Texture portrait = new Texture(Gdx.files.internal("portraits/soldier76.png"));
+    private static Texture portrait = new Texture(Gdx.files.internal("portraits/soldier76.png"));
     private Player player;
 
     private static Sound fireSound = Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/fire.ogg"));
@@ -66,7 +66,7 @@ class Hero extends Actor {
         bodyDef.type = BodyDef.BodyType.DynamicBody;
         bodyDef.position.set(getX() / Config.PIXELS_TO_METERS, getY() / Config.PIXELS_TO_METERS);
 
-        physicsBody = GameScreen.world.createBody(bodyDef);
+        physicsBody = GameScreen.getGameState().getWorld().createBody(bodyDef);
 
         PolygonShape shape = new PolygonShape();
         shape.setAsBox(getWidth()/2 / Config.PIXELS_TO_METERS, getHeight()/2 / Config.PIXELS_TO_METERS);
@@ -118,7 +118,7 @@ class Hero extends Actor {
         if(isDead) {
             c = Color.GRAY;
         }
-        else if(getPlayer().getTeam() == getCurrentPlayer().getTeam()) {
+        else if(getPlayer().getTeam() == GameScreen.getCurrentPlayer().getTeam()) {
             c = new Color(0.14f, 0.7098f, 0.74901f, 1);
         }
         else {
@@ -199,7 +199,7 @@ class Hero extends Actor {
             float initialX = ((physicsBody.getWorldCenter().x + projectileXOffset * (float)Math.cos(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.cos(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
             float initialY = ((physicsBody.getWorldCenter().y + projectileXOffset * (float)Math.sin(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.sin(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
 
-            GameScreen.projectiles.add(new Projectile(
+            GameScreen.getGameState().getProjectiles().add(new Projectile(
                 initialX,
                 initialY,
                 x,
@@ -233,7 +233,7 @@ class Hero extends Actor {
     public void damaged(int damage, Hero attacker) {
         currentHP -= damage;
 
-        if(attacker.getPlayer() == getCurrentPlayer()) {
+        if(attacker.getPlayer() == GameScreen.getCurrentPlayer()) {
             hitMarkerSound.play();
         }
 
@@ -292,7 +292,7 @@ class Hero extends Actor {
     }
 
     public void respawn() {
-        if(this == getCurrentPlayer().getHero()) {
+        if(this == GameScreen.getCurrentPlayer().getHero()) {
             GameScreen.resetMovement();
 
             respawnSound.play();
@@ -301,12 +301,12 @@ class Hero extends Actor {
         float spawnX, spawnY;
 
         if(getPlayer().getTeam() == 0) {
-            spawnX = GameScreen.ATTACKERS_SPAWN_X;
-            spawnY = GameScreen.ATTACKERS_SPAWN_Y;
+            spawnX = GameState.getAttackersSpawnX();
+            spawnY = GameState.getAttackersSpawnY();
         }
         else {
-            spawnX = GameScreen.DEFENDERS_SPAWN_X;
-            spawnY = GameScreen.DEFENDERS_SPAWN_Y;
+            spawnX = GameState.getDefendersSpawnX();
+            spawnY = GameState.getDefendersSpawnY();
         }
 
         physicsBody.setTransform(spawnX / Config.PIXELS_TO_METERS, spawnY / Config.PIXELS_TO_METERS, physicsBody.getAngle());
@@ -334,16 +334,16 @@ class Hero extends Actor {
         physicsBody.getFixtureList().get(0).getFilterData().categoryBits = Config.DEAD_HERO;
         isDead = true;
 
-        if(getCurrentPlayer().getHero() == this) {
+        if(GameScreen.getCurrentPlayer().getHero() == this) {
             GameScreen.setSepia();
-            getCurrentPlayer().incDeaths();
-            GameScreen.updateDeathsLabel("Deaths: " + getCurrentPlayer().getDeaths());
+            GameScreen.getCurrentPlayer().incDeaths();
+            GameScreen.updateDeathsLabel("Deaths: " + GameScreen.getCurrentPlayer().getDeaths());
             GameScreen.flashNotification("You have been eliminated by " + killer.getPlayer().getName());
 
         }
-        else if(getCurrentPlayer().getHero() == killer) {
-            getCurrentPlayer().incEliminations();
-            GameScreen.updateEliminationsLabel("Kills: " + getCurrentPlayer().getEliminations());
+        else if(GameScreen.getCurrentPlayer().getHero() == killer) {
+            GameScreen.getCurrentPlayer().incEliminations();
+            GameScreen.updateEliminationsLabel("Kills: " + GameScreen.getCurrentPlayer().getEliminations());
             GameScreen.flashNotification("Eliminated " + getPlayerName());
             eliminationSound.play();
         }
@@ -352,7 +352,7 @@ class Hero extends Actor {
     }
 
     public void dispose() {
-        GameScreen.heroesDestroyed.add(this);
+        GameScreen.getGameState().getHeroesDestroyed().add(this);
         this.remove();
     }
 
@@ -362,5 +362,17 @@ class Hero extends Actor {
 
     public float getTimeToRespawn() {
         return timeToRespawn;
+    }
+
+    public void setCurrentHP(int x) {
+        currentHP = x;
+    }
+
+    public void setIsDead(boolean x) {
+        isDead = x;
+    }
+
+    public void setTimeToRespawn(float x) {
+        timeToRespawn = x;
     }
 }
