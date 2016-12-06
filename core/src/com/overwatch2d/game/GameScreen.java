@@ -258,8 +258,17 @@ class GameScreen implements Screen, InputProcessor {
                         projectile.hit(hitHero);
                         hitSound.play();
 
+                        String particleFile = "";
+
+                        if(hitHero.getPlayer().getTeam() == currentPlayer.getTeam()) {
+                            particleFile = "particles/gunshot_hostile.party";
+                        }
+                        else {
+                            particleFile = "particles/gunshot_allied.party";
+                        }
+
                         addParticle(
-                            Gdx.files.internal("particles/gunshot_allied.party"),
+                            Gdx.files.internal(particleFile),
                             contact.getWorldManifold().getPoints()[0].x * Config.PIXELS_TO_METERS,
                             contact.getWorldManifold().getPoints()[0].y * Config.PIXELS_TO_METERS
                         );
@@ -574,15 +583,13 @@ class GameScreen implements Screen, InputProcessor {
 
         if(playerHero != null) {
             healthLabel.setText(playerHero.getCurrentHealth() + "/" + playerHero.getMaxHealth());
-            ammoCountLabel.setText(playerHero.getCurrentAmmo() + "/" + playerHero.getMaxAmmo());
+            ammoCountLabel.setText(playerHero.getWeapon().getCurrentBullets() + "/" + playerHero.getWeapon().getMAX_BULLET_CAPACITY());
         }
-
-        LeftMouseHold = true;
 
         if(LeftMouseHold && playerHero != null && !playerHero.isDead()) {
             Vector3 hoverCoordinates = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
             Vector3 position = GameScreen.camera.unproject(hoverCoordinates);
-            playerHero.firePrimary(position.x, position.y);
+            playerHero.getWeapon().firePrimary(position.x, position.y);
             NetworkHelper.clientSend(new Packet("HERO_FIRE_PRIMARY", new HeroFirePrimary(currentPlayer.getName(), position.x, position.y)), NetworkHelper.getHost());
         }
         else {
@@ -776,7 +783,7 @@ class GameScreen implements Screen, InputProcessor {
                 playerHero.dispose();
             }
             if(keycode == Input.Keys.R) {
-                playerHero.reload();
+                playerHero.getWeapon().reload();
             }
         }
 
@@ -1382,7 +1389,7 @@ class GameScreen implements Screen, InputProcessor {
             spawnY = gameState.getDefendersSpawnY();
         }
 
-        Hero h = new Hero(spawnX, spawnY, player);
+        Hero h = new Reaper(spawnX, spawnY, player);
 
         player.setHero(h);
 
@@ -1413,7 +1420,7 @@ class GameScreen implements Screen, InputProcessor {
         Hero h = gameState.getPlayers().stream().filter(p -> p.getName().equals(name)).collect(Collectors.toList()).get(0).getHero();
 
         if(h != null) {
-            h.firePrimary(x, y);
+            h.getWeapon().firePrimary(x, y);
         }
     }
 }
