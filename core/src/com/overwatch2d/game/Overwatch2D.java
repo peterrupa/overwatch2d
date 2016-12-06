@@ -52,7 +52,7 @@ public class Overwatch2D extends Game {
         gameInformationFont = createFont("fonts/koverwatch.ttf", 15);
         shapeRenderer = new ShapeRenderer();
 
-        this.setScreen(new MainMenu(this));
+        this.setScreen(new LoginScreen(this));
     }
 
     public void render() {
