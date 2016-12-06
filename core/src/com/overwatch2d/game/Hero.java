@@ -22,6 +22,7 @@ class Hero extends Actor implements Serializable {
     private final float RESPAWN_TIMER = 5f;
 
     private static Texture texture;
+    private static Texture deadTexture;
     private Body physicsBody;
     private float speed;
 
@@ -41,11 +42,12 @@ class Hero extends Actor implements Serializable {
 
     private float timeToRespawn = 0;
 
-    Hero(float initialX, float initialY, Player player, Texture texture, float speed, int max_health, Texture portrait, Sound selectSound, Sound respawnSound) {
+    Hero(float initialX, float initialY, Player player, Texture texture, Texture deadTexture, float speed, int max_health, Texture portrait, Sound selectSound, Sound respawnSound) {
         this.MAX_HEALTH = max_health;
         this.currentHP = max_health;
         this.player = player;
         this.texture = texture;
+        this.deadTexture = deadTexture;
         this.speed = speed;
         this.portrait = portrait;
         this.selectSound = selectSound;
@@ -85,7 +87,14 @@ class Hero extends Actor implements Serializable {
 
         GameScreen.stage.addActor(this);
 
-        this.weapon = weapon;
+        Hero self = this;
+
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                damaged(1000, self);
+            }
+        }, 3);
     }
 
     public void setBody(Body body) {
@@ -150,21 +159,30 @@ class Hero extends Actor implements Serializable {
 
         batch.begin();
 
+        Texture drawTexture;
+
+        if(isDead) {
+            drawTexture = deadTexture;
+        }
+        else {
+            drawTexture = texture;
+        }
+
         batch.draw(
-            texture,
-            getX() - texture.getWidth() / 2,
-            getY() - texture.getHeight() / 2,
-            (float)texture.getWidth() / 2,
-            (float)texture.getHeight() / 2,
-            (float)texture.getWidth(),
-            (float)texture.getHeight(),
+            drawTexture,
+            getX() - drawTexture.getWidth() / 2,
+            getY() - drawTexture.getHeight() / 2,
+            (float)drawTexture.getWidth() / 2,
+            (float)drawTexture.getHeight() / 2,
+            (float)drawTexture.getWidth(),
+            (float)drawTexture.getHeight(),
             1f,
             1f,
             getRotation(),
-            (int)getX(),
-            (int)getY(),
-            texture.getWidth(),
-            texture.getHeight(),
+            0,
+            0,
+            drawTexture.getWidth(),
+            drawTexture.getHeight(),
             false,
             false
         );
