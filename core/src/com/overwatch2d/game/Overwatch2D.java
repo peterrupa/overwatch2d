@@ -28,7 +28,7 @@ public class Overwatch2D extends Game {
     static BitmapFont gameUIEliminationsFont;
     static Thread clientReceiver;
     static Thread serverReceiver;
-    private static String name = (int)Math.floor(Math.random() * 100) + "";
+    private static String name;
 
     private static GameServer server;
 
@@ -52,7 +52,7 @@ public class Overwatch2D extends Game {
         gameInformationFont = createFont("fonts/koverwatch.ttf", 15);
         shapeRenderer = new ShapeRenderer();
 
-        this.setScreen(new MainMenu(this));
+        this.setScreen(new LoginScreen(this));
     }
 
     public void render() {
@@ -74,6 +74,10 @@ public class Overwatch2D extends Game {
         generator.dispose(); // don't forget to dispose to avoid memory leaks!
 
         return font;
+    }
+
+    public void setName(String name){
+        this.name = name;
     }
 
     public static void createServer() {
