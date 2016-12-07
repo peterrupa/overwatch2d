@@ -103,6 +103,31 @@ public class NetworkHelper implements Constants {
 
                             break;
                         }
+                        case "PLAYER_UPDATE": {
+                            PlayerUpdatePacket p = ((PlayerUpdatePacket)receivedPacket.getPayload());
+
+                            String name = p.getName();
+                            int eliminations = p.getEliminations();
+                            int deaths = p.getDeaths();
+
+                            Gdx.app.postRunnable(() -> GameScreen.updatePlayer(name, eliminations, deaths));
+
+                            break;
+                        }
+                        case "WORLD_UPDATE": {
+                            WorldUpdatePacket w = ((WorldUpdatePacket)receivedPacket.getPayload());
+
+                            int currentObjective = w.getCurrentObjective();
+                            float objective1Capture = w.getObjective1Capture();
+                            float objective2Capture = w.getObjective2Capture();
+                            float gameTimer = w.getGameTimer();
+                            boolean battleHasStarted = w.isBattleHasStarted();
+                            float preparationDuration = w.getPreparationDuration();
+
+                            Gdx.app.postRunnable(() -> GameScreen.updateWorld(currentObjective, objective1Capture, objective2Capture, gameTimer, battleHasStarted, preparationDuration));
+
+                            break;
+                        }
                         case "HERO_FIRE_PRIMARY": {
                             HeroFirePrimary p = ((HeroFirePrimary)receivedPacket.getPayload());
 
@@ -187,6 +212,32 @@ public class NetworkHelper implements Constants {
                             float timeToRespawn = p.getTimeToRespawn();
 
                             Overwatch2D.getServer().updateHero(name, x, y, angle, currentHP, isDead, timeToRespawn);
+
+                            break;
+                        }
+                        case "PLAYER_UPDATE": {
+                            PlayerUpdatePacket p = ((PlayerUpdatePacket)receivedPacket.getPayload());
+
+                            String name = p.getName();
+                            int eliminations = p.getEliminations();
+                            int deaths = p.getDeaths();
+
+                            Overwatch2D.getServer().updatePlayer(name, eliminations, deaths);
+
+                            break;
+                        }
+
+                        case "WORLD_UPDATE": {
+                            WorldUpdatePacket w = ((WorldUpdatePacket)receivedPacket.getPayload());
+
+                            int currentObjective = w.getCurrentObjective();
+                            float objective1Capture = w.getObjective1Capture();
+                            float objective2Capture = w.getObjective2Capture();
+                            float gameTimer = w.getGameTimer();
+                            boolean battleHasStarted = w.isBattleHasStarted();
+                            float preparationDuration = w.getPreparationDuration();
+
+                            Overwatch2D.getServer().updateWorld(currentObjective, objective1Capture, objective2Capture, gameTimer, battleHasStarted, preparationDuration);
 
                             break;
                         }

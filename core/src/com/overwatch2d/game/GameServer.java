@@ -77,6 +77,14 @@ public class GameServer implements Constants {
         broadcast(new Packet("HERO_UPDATE", new HeroUpdatePacket(name, x, y, angle, currentHP, isDead, timeToRespawn)));
     }
 
+    public void updatePlayer(String name, int eliminations, int deaths) {
+        broadcast(new Packet("PLAYER_UPDATE", new PlayerUpdatePacket(name, eliminations, deaths)));
+    }
+
+    public void updateWorld(int currentObjective, float objective1Capture, float objective2Capture, float gameTimer, boolean battleHasStarted, float preparationDuration) {
+        broadcast(new Packet("WORLD_UPDATE", new WorldUpdatePacket(currentObjective, objective1Capture, objective2Capture, gameTimer, battleHasStarted, preparationDuration)));
+    }
+
     public void firePrimary(String name, float x, float y) {
         broadcast(new Packet("HERO_FIRE_PRIMARY", new HeroFirePrimary(name, x, y)));
     }

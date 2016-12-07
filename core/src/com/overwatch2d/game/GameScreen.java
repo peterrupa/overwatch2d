@@ -152,6 +152,8 @@ class GameScreen implements Screen, InputProcessor {
     private static Image mccreeFull;
     private static Image reaperFull;
 
+    private static float timeToSend = 1/30f; // host
+
     GameScreen(final Overwatch2D gam, ArrayList<Player> players, String name) {
         game = gam;
         GameScreen.gameState = new GameState(players);
@@ -752,19 +754,37 @@ class GameScreen implements Screen, InputProcessor {
 
         mouseMoved(Gdx.input.getX(), Gdx.input.getY());
 
-        if(NetworkHelper.isHost()) {
-            for(Hero h: gameState.getHeroes()) {
-                String name = h.getPlayer().getName();
-                float x = h.getBody().getWorldCenter().x;
-                float y = h.getBody().getWorldCenter().y;
-                float angle = h.getBody().getAngle();
-                int currentHP = h.getCurrentHealth();
-                boolean isDead = h.isDead();
-                float timeToRespawn = h.getTimeToRespawn();
 
-                NetworkHelper.clientSend(new Packet("HERO_UPDATE", new HeroUpdatePacket(name, x, y, angle, currentHP, isDead, timeToRespawn)), NetworkHelper.getHost());
+        if(NetworkHelper.isHost()) {
+            timeToSend -= Gdx.graphics.getDeltaTime();
+
+            if(timeToSend < 0) {
+                for(Hero h: gameState.getHeroes()) {
+                    String name = h.getPlayer().getName();
+                    float x = h.getBody().getWorldCenter().x;
+                    float y = h.getBody().getWorldCenter().y;
+                    float angle = h.getBody().getAngle();
+                    int currentHP = h.getCurrentHealth();
+                    boolean isDead = h.isDead();
+                    float timeToRespawn = h.getTimeToRespawn();
+
+                    NetworkHelper.clientSend(new Packet("HERO_UPDATE", new HeroUpdatePacket(name, x, y, angle, currentHP, isDead, timeToRespawn)), NetworkHelper.getHost());
+                }
+
+                for(Player p: gameState.getPlayers()) {
+                    String name = p.getName();
+                    int eliminations = p.getEliminations();
+                    int deaths = p.getDeaths();
+
+                    NetworkHelper.clientSend(new Packet("PLAYER_UPDATE", new PlayerUpdatePacket(name, eliminations, deaths)), NetworkHelper.getHost());
+                }
+
+                NetworkHelper.clientSend(new Packet("WORLD_UPDATE", new WorldUpdatePacket(gameState.getCurrentObjective(), gameState.getObjective1Capture(), gameState.getObjective2Capture(), gameState.getGameTimer(), gameState.isBattleHasStarted(), gameState.getPreparationDuration())), NetworkHelper.getHost());
+
+                timeToSend = 1/30f;
             }
         }
+
     }
 
     @Override
@@ -1513,6 +1533,29 @@ class GameScreen implements Screen, InputProcessor {
             h.setIsDead(isDead);
             h.setTimeToRespawn(timeToRespawn);
         }
+    }
+
+    public static void updatePlayer(String name, int eliminations, int deaths) {
+        Player p = gameState.getPlayers().stream().filter(p2 -> p2.getName().equals(name)).collect(Collectors.toList()).get(0);
+
+        if(p != null) {
+            p.setEliminations(eliminations);
+            p.setDeaths(deaths);
+
+            if(GameScreen.getCurrentPlayer() == p) {
+                GameScreen.updateEliminationsLabel("Kills: " + eliminations);
+                 GameScreen.updateDeathsLabel("Deaths: " + deaths);
+            }
+        }
+    }
+
+    public static void updateWorld(int currentObjective, float objective1Capture, float objective2Capture, float gameTimer, boolean battleHasStarted, float preparationDuration) {
+        gameState.setCurrentObjective(currentObjective);
+        gameState.setObjective1Capture(objective1Capture);
+        gameState.setObjective2Capture(objective2Capture);
+        gameState.setGameTimer(gameTimer);
+        gameState.setBattleHasStarted(battleHasStarted);
+        gameState.setPreparationDuration(preparationDuration);
     }
 
     public static void firePrimary(String name, float x, float y) {

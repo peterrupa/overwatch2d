@@ -70,4 +70,12 @@ public class Player implements Serializable {
     public int getPort() {
         return port;
     }
+
+    public void setEliminations(int eliminations) {
+        this.eliminations = eliminations;
+    }
+
+    public void setDeaths(int deaths) {
+        this.deaths = deaths;
+    }
 }

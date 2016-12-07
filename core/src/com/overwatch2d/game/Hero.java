@@ -265,16 +265,17 @@ class Hero extends Actor implements Serializable {
         physicsBody.getFixtureList().get(0).setSensor(true);
         physicsBody.getFixtureList().get(0).getFilterData().categoryBits = Config.DEAD_HERO;
         isDead = true;
+        player.incDeaths();
+        killer.getPlayer().incEliminations();
 
+        // @TODO: packetize death?
         if(GameScreen.getCurrentPlayer().getHero() == this) {
             GameScreen.setSepia();
-            GameScreen.getCurrentPlayer().incDeaths();
             GameScreen.updateDeathsLabel("Deaths: " + GameScreen.getCurrentPlayer().getDeaths());
             GameScreen.flashNotification("You have been eliminated by " + killer.getPlayer().getName());
 
         }
         else if(GameScreen.getCurrentPlayer().getHero() == killer) {
-            GameScreen.getCurrentPlayer().incEliminations();
             GameScreen.updateEliminationsLabel("Kills: " + GameScreen.getCurrentPlayer().getEliminations());
             GameScreen.flashNotification("Eliminated " + getPlayerName());
             eliminationSound.play();
