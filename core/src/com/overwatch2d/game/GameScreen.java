@@ -1419,6 +1419,12 @@ class GameScreen implements Screen, InputProcessor {
                 Timer.schedule(new Timer.Task() {
                     @Override
                     public void run() {
+                        if(NetworkHelper.isHost()) {
+                            Overwatch2D.endClient();
+                            Overwatch2D.endServer();
+                        }else{
+                            Overwatch2D.endClient();
+                        }
                         game.setScreen(new MainMenu(game));
                     }
                 }, 2f);
@@ -1448,6 +1454,12 @@ class GameScreen implements Screen, InputProcessor {
                 Timer.schedule(new Timer.Task() {
                     @Override
                     public void run() {
+                        if(NetworkHelper.isHost()) {
+                            Overwatch2D.endClient();
+                            Overwatch2D.endServer();
+                        }else{
+                            Overwatch2D.endClient();
+                        }
                         game.setScreen(new MainMenu(game));
                     }
                 }, 2f);
