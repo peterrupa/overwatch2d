@@ -26,6 +26,7 @@ public class GameServer implements Constants {
      *************************************/
     public GameServer() {
         System.out.println("Game server started");
+        NetworkHelper.setIsHost(true);
     }
 
     public void broadcast(Packet packet) {
