@@ -8,8 +8,8 @@ import java.util.ArrayList;
 public class GameState implements Serializable {
     public static final float ATTACKERS_SPAWN_X = 100;
     public static final float ATTACKERS_SPAWN_Y = 100;
-    public static final float DEFENDERS_SPAWN_X = 1000;
-    public static final float DEFENDERS_SPAWN_Y = 1000;
+    public static final float DEFENDERS_SPAWN_X = 1800;
+    public static final float DEFENDERS_SPAWN_Y = 1500;
 
     private final float HERO_SELECTION_DURATION = 5f;
     private final float GAME_PREPARATION_DURATION = 5f + HERO_SELECTION_DURATION;

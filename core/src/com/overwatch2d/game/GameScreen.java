@@ -46,8 +46,8 @@ class GameScreen implements Screen, InputProcessor {
 
     private final float objective2x1 = 1200;
     private final float objective2y1 = 600;
-    private final float objective2x2 = 1400;
-    private final float objective2y2 = 800;
+    private final float objective2x2 = 2000;
+    private final float objective2y2 = 1800;
 
     private static final float NOTIFICATION_DURATION = 3f;
 
@@ -181,11 +181,15 @@ class GameScreen implements Screen, InputProcessor {
         selectionStage = new Stage();
         networkStage = new Stage();
 
-        TiledMap tiledMap = new TmxMapLoader().load("map/sampleMap.tmx");
+        TiledMap tiledMap = new TmxMapLoader().load("map/desert.tmx");
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
 
         // create physics world
         gameState.setWorld(new World(new Vector2(0, 0), true));
+
+        MapBuilder m = new MapBuilder();
+
+        m.buildShapes(tiledMap, 100f, gameState.getWorld());
 
         debugRenderer = new Box2DDebugRenderer();
 
@@ -749,7 +753,7 @@ class GameScreen implements Screen, InputProcessor {
 
         particlesDestroyed.clear();
 
-        debugRenderer.render(gameState.getWorld(), debugMatrix);
+//        debugRenderer.render(gameState.getWorld(), debugMatrix);
 
         mouseMoved(Gdx.input.getX(), Gdx.input.getY());
 
