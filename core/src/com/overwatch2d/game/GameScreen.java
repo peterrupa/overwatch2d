@@ -1416,6 +1416,18 @@ class GameScreen implements Screen, InputProcessor {
             public void run() {
                 PostStage.addActor(victoryLabel);
                 victoryAnnouncerSFX.play(3f);
+                Timer.schedule(new Timer.Task() {
+                    @Override
+                    public void run() {
+                        if(NetworkHelper.isHost()) {
+                            Overwatch2D.endClient();
+                            Overwatch2D.endServer();
+                        }else{
+                            Overwatch2D.endClient();
+                        }
+                        game.setScreen(new MainMenu(game));
+                    }
+                }, 2f);
             }
         }, 2f);
     }
@@ -1438,6 +1450,19 @@ class GameScreen implements Screen, InputProcessor {
                 PostStage.addActor(defeatLabel);
 
                 defeatAnnouncerSFX.play();
+
+                Timer.schedule(new Timer.Task() {
+                    @Override
+                    public void run() {
+                        if(NetworkHelper.isHost()) {
+                            Overwatch2D.endClient();
+                            Overwatch2D.endServer();
+                        }else{
+                            Overwatch2D.endClient();
+                        }
+                        game.setScreen(new MainMenu(game));
+                    }
+                }, 2f);
             }
         }, 2f);
     }

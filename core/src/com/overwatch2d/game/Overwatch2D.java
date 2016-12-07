@@ -81,13 +81,24 @@ public class Overwatch2D extends Game {
     }
 
     public static void createServer() {
-        NetworkHelper.createServerReceiver().start();
+        serverReceiver = NetworkHelper.createServerReceiver();
+        serverReceiver.start();
         server = new GameServer();
     }
 
     public static void createClient() {
         clientReceiver = NetworkHelper.createClientReceiver();
         clientReceiver.start();
+    }
+
+    public static void endClient(){
+        clientReceiver.interrupt();
+        System.out.println("Client thread interrupted");
+    }
+
+    public static void endServer(){
+        serverReceiver.interrupt();
+        System.out.println("Server thread interrupted");
     }
 
     public static GameServer getServer() {

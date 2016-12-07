@@ -66,7 +66,7 @@ public class HostJoin implements Screen, InputProcessor {
         tutorialGradient.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent e, float x, float y) {
-                Gdx.app.exit();
+                game.setScreen(new Instructions(game));
                 dispose();
             }
 

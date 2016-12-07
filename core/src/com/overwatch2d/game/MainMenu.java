@@ -84,45 +84,14 @@ class MainMenu implements Screen, InputProcessor {
             }
         });
 
-        TextButton sett = new TextButton("Settings", textStyle);
-        sett.setPosition(50, 410 - sett.getHeight()/2);
-
-        stage.addActor(sett);
-
-        final Image settGradient = new Image(new Texture(Gdx.files.internal("effects/button_gradient.png")));
-        settGradient.setScale(0.45f);
-        settGradient.setPosition(20, 470 - settGradient.getHeight()/2);
-        settGradient.setColor(1, 1, 1, 0);
-
-        stage.addActor(settGradient);
-
-        settGradient.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent e, float x, float y) {
-                game.setScreen(new Settings(game));
-                dispose();
-            }
-
-            @Override
-            public void enter(InputEvent e, float x, float y, int pointer, Actor fromActor) {
-                settGradient.setVisible(true);
-                settGradient.addAction(Actions.fadeIn(0.1f));
-            }
-
-            @Override
-            public void exit(InputEvent e, float x, float y, int pointer, Actor fromActor) {
-                settGradient.addAction(Actions.fadeOut(0.1f));
-            }
-        });
-
         TextButton exit = new TextButton("Exit", textStyle);
-        exit.setPosition(50, 320 - exit.getHeight()/2);
+        exit.setPosition(50, 410 - exit.getHeight()/2);
 
         stage.addActor(exit);
 
         final Image exitGradient = new Image(new Texture(Gdx.files.internal("effects/button_gradient.png")));
         exitGradient.setScale(0.45f);
-        exitGradient.setPosition(20, 380 - exitGradient.getHeight()/2);
+        exitGradient.setPosition(20, 470 - exitGradient.getHeight()/2);
         exitGradient.setColor(1, 1, 1, 0);
 
         stage.addActor(exitGradient);
