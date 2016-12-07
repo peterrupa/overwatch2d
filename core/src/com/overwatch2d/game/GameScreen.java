@@ -75,7 +75,7 @@ class GameScreen implements Screen, InputProcessor {
 
     private Label healthLabel;
     private Label ammoCountLabel;
-    private Label gunNameLabel;
+    private static Label gunNameLabel;
     private static Label countdownLabel;
     private static Label flashLabel;
     private Label victoryLabel;
@@ -1163,8 +1163,8 @@ class GameScreen implements Screen, InputProcessor {
         Label.LabelStyle gunNameStyle = new Label.LabelStyle();
         gunNameStyle.font = game.gameUIGunNameFont;
 
-        gunNameLabel = new Label("Pulse Rifle", gunNameStyle);
-        gunNameLabel.setPosition(1160, 100);
+        gunNameLabel = new Label("", gunNameStyle);
+        gunNameLabel.setPosition(1160, 110);
 
         UIStage.addActor(gunNameLabel);
 
@@ -1499,7 +1499,7 @@ class GameScreen implements Screen, InputProcessor {
             }
         }, 2f);
     }
-    
+
     public static void flashNotification(String message) {
         flashNotificationTTL = NOTIFICATION_DURATION;
         flashNotificationMessage = message;
@@ -1547,6 +1547,8 @@ class GameScreen implements Screen, InputProcessor {
         else if(heroType == 2) {
             h = new Reaper(spawnX, spawnY, player);
         }
+
+        gunNameLabel.setText(h.getWeapon().getName());
 
         player.setHero(h);
 

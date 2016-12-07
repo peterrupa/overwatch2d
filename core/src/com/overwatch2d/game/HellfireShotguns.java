@@ -23,7 +23,8 @@ public class HellfireShotguns extends Weapon {
             0.15f,
             0.2f,
             Gdx.audio.newSound(Gdx.files.internal("sfx/reaper/reload.mp3")),
-            Gdx.audio.newSound(Gdx.files.internal("sfx/reaper/fire.mp3"))
+            Gdx.audio.newSound(Gdx.files.internal("sfx/reaper/fire.mp3")),
+            "Hellfire Shotguns"
         );
 
         this.shotgunState = 1;

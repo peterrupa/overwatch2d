@@ -17,7 +17,8 @@ public class PulseRifle extends Weapon {
             0.25f,
             0f,
             Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/reload.mp3")),
-            Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/fire.ogg"))
+            Gdx.audio.newSound(Gdx.files.internal("sfx/soldier76/fire.ogg")),
+            "Pulse Rifle"
         );
     }
 }
