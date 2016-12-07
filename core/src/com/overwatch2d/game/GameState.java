@@ -13,7 +13,7 @@ public class GameState implements Serializable {
 
     private final float HERO_SELECTION_DURATION = 5f;
     private final float GAME_PREPARATION_DURATION = 5f + HERO_SELECTION_DURATION;
-    private final float BATTLE_DURATION = 65f;
+    private final float BATTLE_DURATION = 300f;
 
     private int state;
 

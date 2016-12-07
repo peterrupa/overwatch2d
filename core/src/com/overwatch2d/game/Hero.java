@@ -21,8 +21,8 @@ import java.io.Serializable;
 class Hero extends Actor implements Serializable {
     private final float RESPAWN_TIMER = 5f;
 
-    private static Texture texture;
-    private static Texture deadTexture;
+    private Texture texture;
+    private Texture deadTexture;
     private Body physicsBody;
     private float speed;
 
@@ -265,16 +265,16 @@ class Hero extends Actor implements Serializable {
         physicsBody.getFixtureList().get(0).setSensor(true);
         physicsBody.getFixtureList().get(0).getFilterData().categoryBits = Config.DEAD_HERO;
         isDead = true;
+        player.incDeaths();
+        killer.getPlayer().incEliminations();
 
         if(GameScreen.getCurrentPlayer().getHero() == this) {
             GameScreen.setSepia();
-            GameScreen.getCurrentPlayer().incDeaths();
             GameScreen.updateDeathsLabel("Deaths: " + GameScreen.getCurrentPlayer().getDeaths());
             GameScreen.flashNotification("You have been eliminated by " + killer.getPlayer().getName());
 
         }
         else if(GameScreen.getCurrentPlayer().getHero() == killer) {
-            GameScreen.getCurrentPlayer().incEliminations();
             GameScreen.updateEliminationsLabel("Kills: " + GameScreen.getCurrentPlayer().getEliminations());
             GameScreen.flashNotification("Eliminated " + getPlayerName());
             eliminationSound.play();

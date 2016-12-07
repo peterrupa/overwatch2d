@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Timer;
 
 public class Weapon {
+    protected String name;
     protected boolean weaponCanFire = true;
     protected boolean isReloading = false;
     protected float weaponFPS = 10f;
@@ -22,7 +23,7 @@ public class Weapon {
 
     protected Hero hero;
 
-    public Weapon(Hero hero, float weaponFPS, float weaponSpread, int max_bullet, float time_to_reload, int damage_per_shot, float projectileSpawnDistance, float projectileXOffset, Sound reloadSound, Sound fireSound) {
+    public Weapon(Hero hero, float weaponFPS, float weaponSpread, int max_bullet, float time_to_reload, int damage_per_shot, float projectileSpawnDistance, float projectileXOffset, Sound reloadSound, Sound fireSound, String name) {
         this.weaponFPS = weaponFPS;
         this.weaponSpread = weaponSpread;
         this.MAX_BULLET_CAPACITY = max_bullet;
@@ -34,6 +35,7 @@ public class Weapon {
         this.reloadSound = reloadSound;
         this.fireSound = fireSound;
         this.hero = hero;
+        this.name = name;
     }
 
     public void firePrimary(float x, float y) {
@@ -52,14 +54,7 @@ public class Weapon {
             float initialX = ((hero.getBody().getWorldCenter().x + projectileXOffset * (float)Math.cos(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.cos(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
             float initialY = ((hero.getBody().getWorldCenter().y + projectileXOffset * (float)Math.sin(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.sin(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
 
-            GameScreen.getGameState().getProjectiles().add(new PulseRifleBullet(
-                initialX,
-                initialY,
-                x,
-                y,
-                DAMAGE_PER_SHOT,
-                hero
-            ));
+            NetworkHelper.clientSend(new Packet("PROJECTILE_SPAWN", new ProjectileSpawnPacket(initialX, initialY, x, y, DAMAGE_PER_SHOT, hero.getPlayerName())), NetworkHelper.getHost());
 
             String particleFile;
 
@@ -156,5 +151,7 @@ public class Weapon {
     public int getCurrentBullets() {
         return currentBullets;
     }
+
+    public String getName() { return name; }
 }
 

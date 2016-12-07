@@ -18,6 +18,11 @@ public class Player implements Serializable {
     private int eliminations = 0;
     private int deaths = 0;
 
+    private boolean WHold = false;
+    private boolean AHold = false;
+    private boolean SHold = false;
+    private boolean DHold = false;
+
     //constructor
     public Player(String name, InetAddress address, int port){
         this.name = name;
@@ -69,5 +74,45 @@ public class Player implements Serializable {
 
     public int getPort() {
         return port;
+    }
+
+    public void setEliminations(int eliminations) {
+        this.eliminations = eliminations;
+    }
+
+    public void setDeaths(int deaths) {
+        this.deaths = deaths;
+    }
+
+    public boolean isWHold() {
+        return WHold;
+    }
+
+    public void setWHold(boolean WHold) {
+        this.WHold = WHold;
+    }
+
+    public boolean isAHold() {
+        return AHold;
+    }
+
+    public void setAHold(boolean AHold) {
+        this.AHold = AHold;
+    }
+
+    public boolean isSHold() {
+        return SHold;
+    }
+
+    public void setSHold(boolean SHold) {
+        this.SHold = SHold;
+    }
+
+    public boolean isDHold() {
+        return DHold;
+    }
+
+    public void setDHold(boolean DHold) {
+        this.DHold = DHold;
     }
 }

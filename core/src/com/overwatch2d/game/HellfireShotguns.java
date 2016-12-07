@@ -4,6 +4,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Timer;
 
+import java.util.ArrayList;
+
 /**
  * Created by Peter on 12/6/2016.
  */
@@ -14,14 +16,15 @@ public class HellfireShotguns extends Weapon {
         super(
             hero,
             2f,
-            25,
+            50,
             8,
             1.5f,
             7,
             0.15f,
             0.2f,
             Gdx.audio.newSound(Gdx.files.internal("sfx/reaper/reload.mp3")),
-            Gdx.audio.newSound(Gdx.files.internal("sfx/reaper/fire.mp3"))
+            Gdx.audio.newSound(Gdx.files.internal("sfx/reaper/fire.mp3")),
+            "Hellfire Shotguns"
         );
 
         this.shotgunState = 1;
@@ -32,6 +35,9 @@ public class HellfireShotguns extends Weapon {
         if(weaponCanFire && currentBullets > 0 && !isReloading) {
             float initialX = 0, initialY = 0;
             double angle = 0;
+
+            ArrayList<Float> destX = new ArrayList<Float>();
+            ArrayList<Float> destY = new ArrayList<Float>();
 
             for(int i = 0; i < 20; i++) {
                 angle = Math.atan2(
@@ -54,15 +60,11 @@ public class HellfireShotguns extends Weapon {
                     initialY = ((hero.getBody().getWorldCenter().y - projectileXOffset * (float)Math.sin(Math.toRadians(angle - 45))) + 2.75f * projectileSpawnDistance * (float)Math.sin(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
                 }
 
-                GameScreen.getGameState().getProjectiles().add(new HellfireShotgunPellet(
-                    initialX,
-                    initialY,
-                    x,
-                    y,
-                    DAMAGE_PER_SHOT,
-                    hero
-                ));
+                destX.add(x);
+                destY.add(y);
             }
+
+            NetworkHelper.clientSend(new Packet("PROJECTILE_HELLFIRE_SPAWN", new ProjectileHellfireSpawnPacket(initialX, initialY, destX, destY, DAMAGE_PER_SHOT, hero.getPlayerName())), NetworkHelper.getHost());
 
             String particleFile;
 

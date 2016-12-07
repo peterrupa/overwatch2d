@@ -14,7 +14,8 @@ public class Peacekeeper extends Weapon {
             0.25f,
             0f,
             Gdx.audio.newSound(Gdx.files.internal("sfx/mccree/reload.mp3")),
-            Gdx.audio.newSound(Gdx.files.internal("sfx/mccree/fire.mp3"))
+            Gdx.audio.newSound(Gdx.files.internal("sfx/mccree/fire.mp3")),
+            "Peacekeeper"
         );
     }
 }
