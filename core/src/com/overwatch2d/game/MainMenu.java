@@ -102,6 +102,7 @@ class MainMenu implements Screen, InputProcessor {
                 Gdx.app.exit();
             }
 
+            
             @Override
             public void enter(InputEvent e, float x, float y, int pointer, Actor fromActor) {
                 exitGradient.setVisible(true);
