@@ -128,13 +128,63 @@ public class NetworkHelper implements Constants {
 
                             break;
                         }
+                        case "HERO_ANGLE_UPDATE": {
+                            HeroAngleUpdatePacket h = ((HeroAngleUpdatePacket)receivedPacket.getPayload());
+
+                            String name = h.getName();
+                            float angle = h.getAngle();
+
+                            Gdx.app.postRunnable(() -> GameScreen.updateHeroAngle(name, angle));
+
+                            break;
+                        }
+                        case "PLAYER_INPUT_UPDATE": {
+                            PlayerInputUpdatePacket p = ((PlayerInputUpdatePacket)receivedPacket.getPayload());
+
+                            String name = p.getName();
+                            boolean WHold = p.isWHold();
+                            boolean AHold = p.isAHold();
+                            boolean SHold = p.isSHold();
+                            boolean DHold = p.isDHold();
+
+                            Gdx.app.postRunnable(() -> GameScreen.updatePlayerInput(name, WHold, AHold, SHold, DHold));
+
+                            break;
+                        }
+                        case "PROJECTILE_SPAWN": {
+                            ProjectileSpawnPacket p = ((ProjectileSpawnPacket)receivedPacket.getPayload());
+
+                            float initialX = p.getInitialX();
+                            float initialY = p.getInitialY();
+                            float destX = p.getDestX();
+                            float destY = p.getDestY();
+                            int damage = p.getDamage();
+                            String heroName = p.getHeroName();
+
+                            Gdx.app.postRunnable(() -> GameScreen.spawnProjectile(initialX, initialY, destX, destY, damage, heroName));
+
+                            break;
+                        }
+                        case "PROJECTILE_HELLFIRE_SPAWN": {
+                            ProjectileHellfireSpawnPacket p = ((ProjectileHellfireSpawnPacket)receivedPacket.getPayload());
+
+                            float initialX = p.getInitialX();
+                            float initialY = p.getInitialY();
+                            ArrayList<Float> destX = p.getDestX();
+                            ArrayList<Float> destY = p.getDestY();
+                            int damage = p.getDamage();
+                            String heroName = p.getHeroName();
+
+                            Gdx.app.postRunnable(() -> GameScreen.spawnHellfireProjectile(initialX, initialY, destX, destY, damage, heroName));
+
+                            break;
+                        }
                         case "HERO_FIRE_PRIMARY": {
                             HeroFirePrimary p = ((HeroFirePrimary)receivedPacket.getPayload());
 
                             String name = p.getName();
                             float x = p.getX();
                             float y = p.getY();
-
 
                             Gdx.app.postRunnable(() -> GameScreen.firePrimary(name, x, y));
 
@@ -226,7 +276,6 @@ public class NetworkHelper implements Constants {
 
                             break;
                         }
-
                         case "WORLD_UPDATE": {
                             WorldUpdatePacket w = ((WorldUpdatePacket)receivedPacket.getPayload());
 
@@ -238,6 +287,57 @@ public class NetworkHelper implements Constants {
                             float preparationDuration = w.getPreparationDuration();
 
                             Overwatch2D.getServer().updateWorld(currentObjective, objective1Capture, objective2Capture, gameTimer, battleHasStarted, preparationDuration);
+
+                            break;
+                        }
+                        case "HERO_ANGLE_UPDATE": {
+                            HeroAngleUpdatePacket h = ((HeroAngleUpdatePacket)receivedPacket.getPayload());
+
+                            String name = h.getName();
+                            float angle = h.getAngle();
+
+                            Overwatch2D.getServer().updateHeroAngle(name, angle);
+
+                            break;
+                        }
+                        case "PLAYER_INPUT_UPDATE": {
+                            PlayerInputUpdatePacket p = ((PlayerInputUpdatePacket)receivedPacket.getPayload());
+
+                            String name = p.getName();
+                            boolean WHold = p.isWHold();
+                            boolean AHold = p.isAHold();
+                            boolean SHold = p.isSHold();
+                            boolean DHold = p.isDHold();
+
+                            Overwatch2D.getServer().updatePlayerInput(name, WHold, AHold, SHold, DHold);
+
+                            break;
+                        }
+                        case "PROJECTILE_SPAWN": {
+                            ProjectileSpawnPacket p = ((ProjectileSpawnPacket)receivedPacket.getPayload());
+
+                            float initialX = p.getInitialX();
+                            float initialY = p.getInitialY();
+                            float destX = p.getDestX();
+                            float destY = p.getDestY();
+                            int damage = p.getDamage();
+                            String heroName = p.getHeroName();
+
+                            Overwatch2D.getServer().spawnProjectile(initialX, initialY, destX, destY, damage, heroName);
+
+                            break;
+                        }
+                        case "PROJECTILE_HELLFIRE_SPAWN": {
+                            ProjectileHellfireSpawnPacket p = ((ProjectileHellfireSpawnPacket)receivedPacket.getPayload());
+
+                            float initialX = p.getInitialX();
+                            float initialY = p.getInitialY();
+                            ArrayList<Float> destX = p.getDestX();
+                            ArrayList<Float> destY = p.getDestY();
+                            int damage = p.getDamage();
+                            String heroName = p.getHeroName();
+
+                            Overwatch2D.getServer().spawnHellfireProjectile(initialX, initialY, destX, destY, damage, heroName);
 
                             break;
                         }

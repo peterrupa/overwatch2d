@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
@@ -61,10 +62,6 @@ class GameScreen implements Screen, InputProcessor {
     private static Hero playerHero;
     private Cursor cursor;
 
-    private static boolean WHold = false;
-    private static boolean AHold = false;
-    private static boolean SHold = false;
-    private static boolean DHold = false;
     private static boolean LeftMouseHold = false;
 
     private Box2DDebugRenderer debugRenderer;
@@ -614,8 +611,10 @@ class GameScreen implements Screen, InputProcessor {
         gameState.getProjectilesDestroyed().clear();
         gameState.getHeroesDestroyed().clear();
 
-        if(playerHero != null && !playerHero.isDead()) {
-            updateSpeed(playerHero);
+        for(Player p: gameState.getPlayers()) {
+            if(p.getHero() != null && !p.getHero().isDead()) {
+                updateSpeed(p);
+            }
         }
 
         if(gameState.isSlowmo()) {
@@ -754,7 +753,6 @@ class GameScreen implements Screen, InputProcessor {
 
         mouseMoved(Gdx.input.getX(), Gdx.input.getY());
 
-
         if(NetworkHelper.isHost()) {
             timeToSend -= Gdx.graphics.getDeltaTime();
 
@@ -785,22 +783,25 @@ class GameScreen implements Screen, InputProcessor {
             }
         }
 
+        if(playerHero != null && !playerHero.isDead()) {
+            NetworkHelper.clientSend(new Packet("PLAYER_INPUT_UPDATE", new PlayerInputUpdatePacket(currentPlayer.getName(), Gdx.input.isKeyPressed(Input.Keys.W), Gdx.input.isKeyPressed(Input.Keys.A), Gdx.input.isKeyPressed(Input.Keys.S), Gdx.input.isKeyPressed(Input.Keys.D))), NetworkHelper.getHost());
+        }
     }
 
     @Override
     public boolean keyUp(int keycode) {
         if((gameState.getState() == IN_BATTLE || gameState.getState() == POST_GAME) && !playerHero.isDead()) {
             if(keycode == Input.Keys.W) {
-                WHold = false;
+                currentPlayer.setWHold(false);
             }
             if(keycode == Input.Keys.S) {
-                SHold = false;
+                currentPlayer.setSHold(false);
             }
             if(keycode == Input.Keys.D) {
-                DHold = false;
+                currentPlayer.setDHold(false);
             }
             if(keycode == Input.Keys.A) {
-                AHold = false;
+                currentPlayer.setAHold(false);
             }
 
             if(keycode == Input.Keys.H) {
@@ -810,6 +811,8 @@ class GameScreen implements Screen, InputProcessor {
             if(keycode == Input.Keys.R) {
                 playerHero.getWeapon().reload();
             }
+
+            NetworkHelper.clientSend(new Packet("PLAYER_INPUT_UPDATE", new PlayerInputUpdatePacket(currentPlayer.getName(), currentPlayer.isWHold(), currentPlayer.isAHold(), currentPlayer.isSHold(), currentPlayer.isDHold())), NetworkHelper.getHost());
         }
 
         if(keycode == Input.Keys.ESCAPE) {
@@ -823,17 +826,19 @@ class GameScreen implements Screen, InputProcessor {
     public boolean keyDown(int keycode) {
         if((gameState.getState() == IN_BATTLE || gameState.getState() == POST_GAME) && !playerHero.isDead()) {
             if(keycode == Input.Keys.W) {
-                WHold = true;
+                currentPlayer.setWHold(true);
             }
             if(keycode == Input.Keys.S) {
-                SHold = true;
+                currentPlayer.setSHold(true);
             }
             if(keycode == Input.Keys.D) {
-                DHold = true;
+                currentPlayer.setDHold(true);
             }
             if(keycode == Input.Keys.A) {
-                AHold = true;
+                currentPlayer.setAHold(true);
             }
+
+            NetworkHelper.clientSend(new Packet("PLAYER_INPUT_UPDATE", new PlayerInputUpdatePacket(currentPlayer.getName(), currentPlayer.isWHold(), currentPlayer.isAHold(), currentPlayer.isSHold(), currentPlayer.isDHold())), NetworkHelper.getHost());
         }
 
         return false;
@@ -855,26 +860,27 @@ class GameScreen implements Screen, InputProcessor {
         }
     }
 
-    private void updateSpeed(Hero hero) {
-        Body body = hero.getBody();
+    private void updateSpeed(Player p) {
+        Hero h = p.getHero();
+        Body body = h.getBody();
 
-        if (WHold) {
-            body.applyForceToCenter(0f, hero.getSpeed(), true);
+        if (p.isWHold()) {
+            body.applyForceToCenter(0f, h.getSpeed(), true);
         }
 
-        if (SHold) {
-            body.applyForceToCenter(0f, -hero.getSpeed(), true);
+        if (p.isSHold()) {
+            body.applyForceToCenter(0f, -h.getSpeed(), true);
         }
 
-        if (AHold) {
-            body.applyForceToCenter(-hero.getSpeed(), 0f, true);
+        if (p.isAHold()) {
+            body.applyForceToCenter(-h.getSpeed(), 0f, true);
         }
 
-        if (DHold) {
-            body.applyForceToCenter(hero.getSpeed(), 0f, true);
+        if (p.isDHold()) {
+            body.applyForceToCenter(h.getSpeed(), 0f, true);
         }
 
-        if(!WHold && !DHold && !AHold && !SHold) {
+        if(!p.isWHold() && !p.isDHold() && !p.isAHold() && !p.isSHold()) {
             body.applyForceToCenter(0, 0f, true);
         }
     }
@@ -973,6 +979,9 @@ class GameScreen implements Screen, InputProcessor {
             if(!playerHero.isDead()) {
                 playerHero.getBody().setTransform(playerHero.getBody().getWorldCenter(), (float)Math.toRadians(degrees));
             }
+
+
+            NetworkHelper.clientSend(new Packet("HERO_ANGLE_UPDATE", new HeroAngleUpdatePacket(currentPlayer.getName(), playerHero.getBody().getAngle())), NetworkHelper.getHost());
         }
 
         return false;
@@ -1470,11 +1479,13 @@ class GameScreen implements Screen, InputProcessor {
     }
 
     public static void resetMovement() {
-        WHold = false;
-        AHold = false;
-        SHold = false;
-        DHold = false;
+        currentPlayer.setWHold(false);
+        currentPlayer.setAHold(false);
+        currentPlayer.setSHold(false);
+        currentPlayer.setDHold(false);
         LeftMouseHold = false;
+
+        NetworkHelper.clientSend(new Packet("PLAYER_INPUT_UPDATE", new PlayerInputUpdatePacket(currentPlayer.getName(), currentPlayer.isWHold(), currentPlayer.isAHold(), currentPlayer.isSHold(), currentPlayer.isDHold())), NetworkHelper.getHost());
 
         stage.getBatch().setShader(null);
         tiledMapRenderer.getBatch().setShader(null);
@@ -1563,6 +1574,54 @@ class GameScreen implements Screen, InputProcessor {
 
         if(h != null) {
             h.getWeapon().firePrimary(x, y);
+        }
+    }
+
+    public static void updateHeroAngle(String name, float angle) {
+        Hero h = gameState.getPlayers().stream().filter(p -> p.getName().equals(name)).collect(Collectors.toList()).get(0).getHero();
+
+        if(h != null) {
+            Vector2 position = h.getBody().getWorldCenter();
+            h.getBody().setTransform(position, angle);
+        }
+    }
+
+    public static void updatePlayerInput(String name, boolean WHold, boolean AHold, boolean SHold, boolean DHold) {
+        Player p = gameState.getPlayers().stream().filter(p2 -> p2.getName().equals(name)).collect(Collectors.toList()).get(0);
+
+        if(p != null) {
+            p.setWHold(WHold);
+            p.setAHold(AHold);
+            p.setSHold(SHold);
+            p.setDHold(DHold);
+        }
+    }
+
+    public static void spawnProjectile(float initialX, float initialY, float destX, float destY, int damage, String heroName) {
+        Hero h = gameState.getPlayers().stream().filter(p2 -> p2.getName().equals(heroName)).collect(Collectors.toList()).get(0).getHero();
+
+        GameScreen.getGameState().getProjectiles().add(new PulseRifleBullet(
+            initialX,
+            initialY,
+            destX,
+            destY,
+            damage,
+            h
+        ));
+    }
+
+    public static void spawnHellfireProjectile(float initialX, float initialY, ArrayList<Float> destX, ArrayList<Float> destY, int damage, String heroName) {
+        Hero h = gameState.getPlayers().stream().filter(p2 -> p2.getName().equals(heroName)).collect(Collectors.toList()).get(0).getHero();
+
+        for(int i = 0; i < destX.size(); i++) {
+            GameScreen.getGameState().getProjectiles().add(new HellfireShotgunPellet(
+                initialX,
+                initialY,
+                destX.get(i),
+                destY.get(i),
+                damage,
+                h
+            ));
         }
     }
 }

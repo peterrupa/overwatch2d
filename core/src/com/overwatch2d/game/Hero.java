@@ -268,7 +268,6 @@ class Hero extends Actor implements Serializable {
         player.incDeaths();
         killer.getPlayer().incEliminations();
 
-        // @TODO: packetize death?
         if(GameScreen.getCurrentPlayer().getHero() == this) {
             GameScreen.setSepia();
             GameScreen.updateDeathsLabel("Deaths: " + GameScreen.getCurrentPlayer().getDeaths());
