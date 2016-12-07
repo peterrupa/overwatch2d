@@ -33,7 +33,7 @@ public class Overwatch2D extends Game {
     private static String name;
 
     private static GameServer server;
-    private static ChatServer chatServer;
+    //private static ChatServer chatServer;
 
     public void create() {
         batch = new SpriteBatch();
@@ -87,7 +87,7 @@ public class Overwatch2D extends Game {
         NetworkHelper.createServerReceiver().start();
         server = new GameServer();
         try {
-            chatServer = new ChatServer();
+            new ChatServer();
         } catch (IOException e) {
             e.printStackTrace();
         }
