@@ -788,6 +788,10 @@ class GameScreen implements Screen, InputProcessor {
             if(keycode == Input.Keys.R) {
                 playerHero.getWeapon().reload();
             }
+            if(keycode == Input.Keys.ENTER) {
+                System.out.println("Chat!");
+                Chat c = new Chat(UIStage);
+            }
         }
 
         if(keycode == Input.Keys.ESCAPE) {
