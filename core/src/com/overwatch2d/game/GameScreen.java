@@ -1457,8 +1457,9 @@ class GameScreen implements Screen, InputProcessor {
                             Overwatch2D.endClient();
                         }
                         game.setScreen(new MainMenu(game));
+                        Gdx.input.setCursorCatched(false);
                     }
-                }, 2f);
+                }, 10f);
             }
         }, 2f);
     }
@@ -1492,12 +1493,13 @@ class GameScreen implements Screen, InputProcessor {
                             Overwatch2D.endClient();
                         }
                         game.setScreen(new MainMenu(game));
+                        Gdx.input.setCursorCatched(false);
                     }
-                }, 2f);
+                }, 10f);
             }
         }, 2f);
     }
-
+    
     public static void flashNotification(String message) {
         flashNotificationTTL = NOTIFICATION_DURATION;
         flashNotificationMessage = message;
