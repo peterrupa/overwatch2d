@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 public class NetworkHelper implements Constants {
     private static InetAddress host;
+    private static boolean isHost = false;
     private static MulticastSocket clientSocket = null;
     private static boolean isServer = false;
 
@@ -250,5 +251,13 @@ public class NetworkHelper implements Constants {
 
     public static InetAddress getHost() {
         return NetworkHelper.host;
+    }
+
+    public static void setIsHost(boolean isHost) {
+        NetworkHelper.isHost = isHost;
+    }
+
+    public static boolean isHost() {
+        return isHost;
     }
 }
