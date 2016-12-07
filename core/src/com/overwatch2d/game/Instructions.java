@@ -36,7 +36,7 @@ public class Instructions implements Screen {
 
         stage = new Stage(new ExtendViewport(w, h, camera));
 
-        Image background = new Image(new Texture(Gdx.files.internal("background/login.jpg")));
+        Image background = new Image(new Texture(Gdx.files.internal("background/tutorials.jpg")));
         background.setSize(w, h);
 
         stage.addActor(background);
@@ -45,12 +45,12 @@ public class Instructions implements Screen {
         textStyle.font = game.font;
 
         TextButton login = new TextButton("Back", textStyle);
-        login.setPosition(170, 370);
+        login.setPosition(850, 60);
         stage.addActor(login);
 
         final Image beginGradient = new Image(new Texture(Gdx.files.internal("effects/button_gradient.png")));
         beginGradient.setScale(0.45f);
-        beginGradient.setPosition(130, 350);
+        beginGradient.setPosition(800, 40);
         beginGradient.setColor(1, 1, 1, 0);
 
         stage.addActor(beginGradient);
