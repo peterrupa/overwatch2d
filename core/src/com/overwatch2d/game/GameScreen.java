@@ -752,16 +752,18 @@ class GameScreen implements Screen, InputProcessor {
 
         mouseMoved(Gdx.input.getX(), Gdx.input.getY());
 
-        if(playerHero != null) {
-            String name = currentPlayer.getName();
-            float x = playerHero.getBody().getWorldCenter().x;
-            float y = playerHero.getBody().getWorldCenter().y;
-            float angle = playerHero.getBody().getAngle();
-            int currentHP = playerHero.getCurrentHealth();
-            boolean isDead = playerHero.isDead();
-            float timeToRespawn = playerHero.getTimeToRespawn();
+        if(NetworkHelper.isHost()) {
+            for(Hero h: gameState.getHeroes()) {
+                String name = h.getPlayer().getName();
+                float x = h.getBody().getWorldCenter().x;
+                float y = h.getBody().getWorldCenter().y;
+                float angle = h.getBody().getAngle();
+                int currentHP = h.getCurrentHealth();
+                boolean isDead = h.isDead();
+                float timeToRespawn = h.getTimeToRespawn();
 
-            NetworkHelper.clientSend(new Packet("HERO_UPDATE", new HeroUpdatePacket(name, x, y, angle, currentHP, isDead, timeToRespawn)), NetworkHelper.getHost());
+                NetworkHelper.clientSend(new Packet("HERO_UPDATE", new HeroUpdatePacket(name, x, y, angle, currentHP, isDead, timeToRespawn)), NetworkHelper.getHost());
+            }
         }
     }
 

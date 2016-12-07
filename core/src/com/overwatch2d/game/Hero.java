@@ -21,8 +21,8 @@ import java.io.Serializable;
 class Hero extends Actor implements Serializable {
     private final float RESPAWN_TIMER = 5f;
 
-    private static Texture texture;
-    private static Texture deadTexture;
+    private Texture texture;
+    private Texture deadTexture;
     private Body physicsBody;
     private float speed;
 
