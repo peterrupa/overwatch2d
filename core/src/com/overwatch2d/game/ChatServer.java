@@ -12,7 +12,7 @@ import java.util.LinkedList;
 public class ChatServer implements Runnable{
     private ServerSocket serverSocket;
     private LinkedList<Socket> listOfClients = new LinkedList<Socket>();
-    public static int port = 3000;
+    public static int port = 7070;
     boolean connected = true;
 
     public ChatServer() throws IOException{

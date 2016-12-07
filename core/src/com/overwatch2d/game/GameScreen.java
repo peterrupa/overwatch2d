@@ -37,6 +37,7 @@ class GameScreen implements Screen, InputProcessor {
     private static final int HERO_SELECTION = 0;
     private static final int IN_BATTLE = 1;
     private static final int POST_GAME = 2;
+    private static final int IN_CHAT = 3;
 
     private final float objective1x1 = 600;
     private final float objective1y1 = 1200;
@@ -145,6 +146,7 @@ class GameScreen implements Screen, InputProcessor {
     private boolean isAltTabbed = false;
 
     private static GameState gameState;
+    private static Chat c;
 
     private static int heroSelected = -1;
 
@@ -788,9 +790,13 @@ class GameScreen implements Screen, InputProcessor {
             if(keycode == Input.Keys.R) {
                 playerHero.getWeapon().reload();
             }
-            if(keycode == Input.Keys.ENTER) {
-                System.out.println("Chat!");
-                Chat c = new Chat(UIStage);
+            if(keycode == Input.Keys.ENTER && gameState.getState() == IN_BATTLE) {
+                c = new Chat();
+
+                UIStage.addActor(c.message);
+                UIStage.addActor(c.chat);
+                UIStage.setKeyboardFocus(c.message);
+                //this.setState(IN_CHAT);
             }
         }
 
@@ -835,6 +841,9 @@ class GameScreen implements Screen, InputProcessor {
             Gdx.input.setCursorCatched(false);
             initSelectionStage();
         }
+        else if(state == IN_CHAT){
+            UIStage.setKeyboardFocus(c.message);
+        }
     }
 
     private void updateSpeed(Hero hero) {
@@ -871,6 +880,9 @@ class GameScreen implements Screen, InputProcessor {
         }
         if(gameState.getState() == IN_BATTLE || gameState.getState() == POST_GAME) {
             Gdx.input.setCursorCatched(true);
+        }
+        if(gameState.getState() == IN_CHAT){
+            UIStage.setKeyboardFocus(c.message);
         }
     }
 
@@ -1548,5 +1560,14 @@ class GameScreen implements Screen, InputProcessor {
         if(h != null) {
             h.getWeapon().firePrimary(x, y);
         }
+    }
+
+    public static void initChat(){
+        c = new Chat();
+
+        UIStage.addActor(c.message);
+        UIStage.addActor(c.chat);
+
+        UIStage.setKeyboardFocus(c.message);
     }
 }

@@ -87,11 +87,6 @@ public class Overwatch2D extends Game {
         serverReceiver = NetworkHelper.createServerReceiver();
         serverReceiver.start();
         server = new GameServer();
-        try {
-            new ChatServer();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
     }
 

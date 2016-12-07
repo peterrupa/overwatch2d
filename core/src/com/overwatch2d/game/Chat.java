@@ -14,17 +14,17 @@ import java.io.IOException;
 public class Chat {
     private ChatServer server;
     private ChatClient client;
-    private TextField message;
-    private TextField chat;
-    private Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
+    protected TextField message;
+    protected TextField chat;
+    protected Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
 
-    Chat(Stage UIStage){
+    Chat(){
         message = new TextField("", skin);
         message.setMessageText("Enter Message");
         message.setWidth(500);
         message.setPosition(10, 10);
 
-        UIStage.setKeyboardFocus(message);
+        //UIStage.setKeyboardFocus(message);
         message.getOnscreenKeyboard().show(true);
 
 
@@ -36,8 +36,8 @@ public class Chat {
         chat.setPosition(10, 70);
         chat.setDisabled(true);
 
-        UIStage.addActor(message);
-        UIStage.addActor(chat);
+        //UIStage.addActor(message);
+        //UIStage.addActor(chat);
     }
 
     private void appendChatBody(){
