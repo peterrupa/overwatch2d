@@ -52,14 +52,7 @@ public class Weapon {
             float initialX = ((hero.getBody().getWorldCenter().x + projectileXOffset * (float)Math.cos(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.cos(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
             float initialY = ((hero.getBody().getWorldCenter().y + projectileXOffset * (float)Math.sin(Math.toRadians(angle - 45))) + projectileSpawnDistance * (float)Math.sin(Math.toRadians(angle))) * Config.PIXELS_TO_METERS;
 
-            GameScreen.getGameState().getProjectiles().add(new PulseRifleBullet(
-                initialX,
-                initialY,
-                x,
-                y,
-                DAMAGE_PER_SHOT,
-                hero
-            ));
+            NetworkHelper.clientSend(new Packet("PROJECTILE_SPAWN", new ProjectileSpawnPacket(initialX, initialY, x, y, DAMAGE_PER_SHOT, hero.getPlayerName())), NetworkHelper.getHost());
 
             String particleFile;
 
