@@ -7,6 +7,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
+import java.io.IOException;
+
 public class Overwatch2D extends Game {
     static SpriteBatch batch;
     static BitmapFont font;
@@ -31,6 +33,7 @@ public class Overwatch2D extends Game {
     private static String name;
 
     private static GameServer server;
+    //private static ChatServer chatServer;
 
     public void create() {
         batch = new SpriteBatch();
@@ -84,6 +87,12 @@ public class Overwatch2D extends Game {
         serverReceiver = NetworkHelper.createServerReceiver();
         serverReceiver.start();
         server = new GameServer();
+        try {
+            new ChatServer();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public static void createClient() {
