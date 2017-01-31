@@ -39,15 +39,15 @@ class GameScreen implements Screen, InputProcessor {
     private static final int IN_BATTLE = 1;
     private static final int POST_GAME = 2;
 
-    private final float objective1x1 = 600;
-    private final float objective1y1 = 1200;
-    private final float objective1x2 = 1000;
-    private final float objective1y2 = 1400;
+    private final float objective1x1 = 2436;
+    private final float objective1y1 = 1464;
+    private final float objective1x2 = 2751;
+    private final float objective1y2 = 1971;
 
-    private final float objective2x1 = 1200;
-    private final float objective2y1 = 600;
-    private final float objective2x2 = 2000;
-    private final float objective2y2 = 1800;
+    private final float objective2x1 = 1408;
+    private final float objective2y1 = 537;
+    private final float objective2x2 = 1849;
+    private final float objective2y2 = 921;
 
     private static final float NOTIFICATION_DURATION = 3f;
 
@@ -241,6 +241,40 @@ class GameScreen implements Screen, InputProcessor {
                     }
 
                     gameState.getObjective2Heroes().add(h);
+                }
+
+                if((contact.getFixtureA().getBody().getUserData() instanceof Projectile &&
+                    contact.getFixtureB().getBody().getUserData().equals("Obstacle")) ||
+                    (contact.getFixtureA().getBody().getUserData().equals("Obstacle") &&
+                            contact.getFixtureB().getBody().getUserData() instanceof Projectile)
+                    ) {
+                    Projectile projectile;
+
+                    if(contact.getFixtureA().getBody().getUserData() instanceof Projectile) {
+                        projectile = (Projectile) contact.getFixtureA().getBody().getUserData();
+                    }
+                    else {
+                        projectile = (Projectile) contact.getFixtureB().getBody().getUserData();
+                    }
+
+                    if(!projectile.isHit()) {
+                        projectile.die();
+
+                        String particleFile = "";
+
+                        if(projectile.getOwner().getPlayer().getTeam() == currentPlayer.getTeam()) {
+                            particleFile = "particles/gunshot_allied.party";
+                        }
+                        else {
+                            particleFile = "particles/gunshot_hostile.party";
+                        }
+
+                        addParticle(
+                                Gdx.files.internal(particleFile),
+                                contact.getWorldManifold().getPoints()[0].x * Config.PIXELS_TO_METERS,
+                                contact.getWorldManifold().getPoints()[0].y * Config.PIXELS_TO_METERS
+                        );
+                    }
                 }
 
                 if((contact.getFixtureA().getBody().getUserData() instanceof Projectile &&
@@ -753,7 +787,7 @@ class GameScreen implements Screen, InputProcessor {
 
         particlesDestroyed.clear();
 
-//        debugRenderer.render(gameState.getWorld(), debugMatrix);
+        debugRenderer.render(gameState.getWorld(), debugMatrix);
 
         mouseMoved(Gdx.input.getX(), Gdx.input.getY());
 
@@ -808,10 +842,10 @@ class GameScreen implements Screen, InputProcessor {
                 currentPlayer.setAHold(false);
             }
 
-            if(keycode == Input.Keys.H) {
-                this.setState(HERO_SELECTION);
-                playerHero.dispose();
-            }
+//            if(keycode == Input.Keys.H) {
+//                this.setState(HERO_SELECTION);
+//                playerHero.dispose();
+//            }
             if(keycode == Input.Keys.R) {
                 playerHero.getWeapon().reload();
             }
@@ -819,9 +853,9 @@ class GameScreen implements Screen, InputProcessor {
             NetworkHelper.clientSend(new Packet("PLAYER_INPUT_UPDATE", new PlayerInputUpdatePacket(currentPlayer.getName(), currentPlayer.isWHold(), currentPlayer.isAHold(), currentPlayer.isSHold(), currentPlayer.isDHold())), NetworkHelper.getHost());
         }
 
-        if(keycode == Input.Keys.ESCAPE) {
-            Gdx.app.exit();
-        }
+//        if(keycode == Input.Keys.ESCAPE) {
+//            Gdx.app.exit();
+//        }
 
         return false;
     }

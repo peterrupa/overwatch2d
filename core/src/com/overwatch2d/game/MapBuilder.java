@@ -55,7 +55,14 @@ public class MapBuilder {
            BodyDef bd = new BodyDef();
             bd.type = BodyDef.BodyType.StaticBody;
             Body body = world.createBody(bd);
-            body.createFixture(shape, 1);
+
+            FixtureDef fixtureDef = new FixtureDef();
+            fixtureDef.shape = shape;
+            fixtureDef.density = 1f;
+            fixtureDef.filter.categoryBits = Config.OBSTACLES;
+
+            body.createFixture(fixtureDef);
+            body.setUserData("Obstacle");
             
             bodies.add(body);
 

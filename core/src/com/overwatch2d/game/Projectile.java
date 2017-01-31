@@ -45,11 +45,11 @@ class Projectile extends Actor {
 
         if(owner.getPlayer().getTeam() == 0) {
             fixtureDef.filter.categoryBits = Config.PROJECTILE_ENTITY_0;
-            fixtureDef.filter.maskBits = Config.HERO_ENTITY_1;
+            fixtureDef.filter.maskBits = Config.HERO_ENTITY_1 | Config.OBSTACLES;
         }
         else {
             fixtureDef.filter.categoryBits = Config.PROJECTILE_ENTITY_1;
-            fixtureDef.filter.maskBits = Config.HERO_ENTITY_0;
+            fixtureDef.filter.maskBits = Config.HERO_ENTITY_0 | Config.OBSTACLES;
         }
 
         physicsBody.createFixture(fixtureDef);
@@ -113,6 +113,8 @@ class Projectile extends Actor {
         return physicsBody;
     }
 
+    public Hero getOwner() { return owner; }
+
     public void hit(Hero hitHero) {
         hitHero.damaged(damage, owner);
 
@@ -122,6 +124,7 @@ class Projectile extends Actor {
     }
 
     public void die() {
+        hit = true;
         GameScreen.getGameState().getProjectilesDestroyed().add(this);
         this.remove();
     }

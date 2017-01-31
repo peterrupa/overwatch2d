@@ -6,14 +6,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 public class GameState implements Serializable {
-    public static final float ATTACKERS_SPAWN_X = 100;
-    public static final float ATTACKERS_SPAWN_Y = 100;
-    public static final float DEFENDERS_SPAWN_X = 1800;
-    public static final float DEFENDERS_SPAWN_Y = 1500;
+    public static final float ATTACKERS_SPAWN_X = 1000;
+    public static final float ATTACKERS_SPAWN_Y = 2364;
+    public static final float DEFENDERS_SPAWN_X = 2109;
+    public static final float DEFENDERS_SPAWN_Y = 1105;
 
-    private final float HERO_SELECTION_DURATION = 5f;
+    private final float HERO_SELECTION_DURATION = 10f;
     private final float GAME_PREPARATION_DURATION = 5f + HERO_SELECTION_DURATION;
-    private final float BATTLE_DURATION = 300f;
+    private final float BATTLE_DURATION = 180f;
 
     private int state;
 
